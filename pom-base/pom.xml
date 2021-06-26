@@ -66,6 +66,7 @@
 			<!-- Microprofile -->
 		<org.eclipse.microprofile.microprofile.version>3.3</org.eclipse.microprofile.microprofile.version>
 		<org.eclipse.microprofile.openapi.microprofile-openapi-api.version>1.1.2</org.eclipse.microprofile.openapi.microprofile-openapi-api.version>
+		<org.microprofile-ext.openapi-ext.openapi-ui.version>1.1.4</org.microprofile-ext.openapi-ext.openapi-ui.version>
 			<!-- Wildfly -->
 		<wildfly.version>22.0.0.Final</wildfly.version>
         <org.wildfly.bom.wildfly-jakartaee8.version>${wildfly.version}</org.wildfly.bom.wildfly-jakartaee8.version>

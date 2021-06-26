@@ -18,7 +18,9 @@
 
 	<properties>
 		<swagger.json>${web.context}/api/swagger.json</swagger.json>
+		<!--
 		<org.microprofile-ext.openapi-ext.openapi-ui.version>1.1.4</org.microprofile-ext.openapi-ext.openapi-ui.version>
+		-->
 	</properties>
 	
 	<profiles>
