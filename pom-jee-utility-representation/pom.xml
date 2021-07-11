@@ -15,6 +15,10 @@
 	<version>pom.jee.utility.representation.0.1.0</version>
 	<packaging>pom</packaging>
 	
+	<properties>
+		<org.jboss.resteasy.resteasy-bom.version>3.5.1.Final</org.jboss.resteasy.resteasy-bom.version>
+	</properties>
+	
 	<modules>
 		<module>../pom-jee-utility-representation-client</module>
 		<module>../pom-jee-utility-representation-server</module>
