@@ -3,24 +3,24 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+	
 	<modelVersion>4.0.0</modelVersion>
-
+	
 	<parent>
 		<groupId>org.cyk.quarkus.pom</groupId>
 		<artifactId>quarkus-pom-extension</artifactId>
 		<version>0.0.1</version>
 	</parent>
-
-	<groupId>org.cyk.quarkus.extension.persistence.hibernate</groupId>
-	<artifactId>persistence-hibernate-orm-parent</artifactId>
+	
+	<groupId>org.cyk.quarkus.extension.business</groupId>
+	<artifactId>business-core-parent</artifactId>
 	<version>1.0.0</version>
 	<packaging>pom</packaging>
 	
-	<name>Persistence Hibernate Orm - Parent</name>
-	<modules>
-		<module>persistence-hibernate-orm-deployment</module>
-		<module>persistence-hibernate-orm</module>
-	</modules>
+	<name>Business Core - Parent</name>
 
+	<modules>
+		<module>business-core</module>
+		<module>business-core-deployment</module>
+	</modules>
 </project>
