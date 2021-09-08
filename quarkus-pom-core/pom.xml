@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>org.cyk.quarkus.pom</groupId>
+	<artifactId>quarkus-pom-core</artifactId>
+	<version>0.0.1</version>
+	<packaging>pom</packaging>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>		
+		<compiler-plugin.version>3.8.1</compiler-plugin.version>
+		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>		
+		<failsafe-plugin.version>${surefire-plugin.version}</failsafe-plugin.version>
+		<maven.compiler.parameters>true</maven.compiler.parameters>
+		
+		<quarkus.version>2.2.1.Final</quarkus.version>		
+		<quarkus.bom.groupId>io.quarkus</quarkus.bom.groupId>
+		<quarkus.bom.artifactId>quarkus-bom</quarkus.bom.artifactId>
+		<quarkus.bom.version>${quarkus.version}</quarkus.bom.version>
+	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>${quarkus.bom.groupId}</groupId>
+				<artifactId>${quarkus.bom.artifactId}</artifactId>
+				<version>${quarkus.bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<modules>
+		<module>../quarkus-pom-extension</module>
+		<module>../quarkus-pom-server</module>
+	</modules>
+	
+</project>
