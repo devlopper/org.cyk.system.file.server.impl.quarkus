@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.cyk.quarkus.extension.persistence.hibernate</groupId>
+		<artifactId>persistence-hibernate-orm-parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+	<artifactId>persistence-hibernate-orm-deployment</artifactId>
+	<name>Persistence Hibernate Orm - Deployment</name>
+	<dependencies>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-arc-deployment</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-hibernate-orm-deployment</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.cyk.quarkus.extension.persistence.hibernate</groupId>
+			<artifactId>persistence-hibernate-orm</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-junit5-internal</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>io.quarkus</groupId>
+							<artifactId>quarkus-extension-processor</artifactId>
+							<version>${quarkus.version}</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
