@@ -19,6 +19,8 @@
 	
 	<properties>
 		<quarkus.bom.groupId>io.quarkus.platform</quarkus.bom.groupId>
+		<org.projectlombok.lombok.version>1.18.20</org.projectlombok.lombok.version>
+		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
 	</properties>
 		
 	<dependencies>
@@ -49,7 +51,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.20</version>
+			<version>${org.projectlombok.lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		
@@ -65,10 +67,16 @@
 			<artifactId>rest-assured</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-jdbc-h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>${org.assertj.assertj-core.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
