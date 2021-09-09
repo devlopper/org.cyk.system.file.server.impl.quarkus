@@ -14,11 +14,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-deployment</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-arc-deployment</artifactId>
+			<artifactId>quarkus-resteasy-jackson-deployment</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.service</groupId>

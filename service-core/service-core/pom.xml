@@ -14,11 +14,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-arc</artifactId>
+			<artifactId>quarkus-resteasy-jackson</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.cyk.jee.utility.service.server</groupId>
