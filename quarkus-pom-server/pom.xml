@@ -21,6 +21,8 @@
 		<quarkus.bom.groupId>io.quarkus.platform</quarkus.bom.groupId>
 		<org.projectlombok.lombok.version>1.18.20</org.projectlombok.lombok.version>
 		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
+		<jacoco.version>0.8.4</jacoco.version>
+		<org.jacoco.jacoco-maven-plugin.version>${jacoco.version}</org.jacoco.jacoco-maven-plugin.version>
 	</properties>
 		
 	<dependencies>
@@ -79,6 +81,13 @@
 			<version>${org.assertj.assertj-core.version}</version>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-jacoco</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
 	</dependencies>
 	
 	<build>
@@ -98,6 +107,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${compiler-plugin.version}</version>
@@ -105,6 +115,7 @@
 					<parameters>${maven.compiler.parameters}</parameters>
 				</configuration>
 			</plugin>
+			
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire-plugin.version}</version>

@@ -21,7 +21,7 @@
 		<failsafe-plugin.version>${surefire-plugin.version}</failsafe-plugin.version>
 		<maven.compiler.parameters>true</maven.compiler.parameters>
 		
-		<quarkus.version>2.2.1.Final</quarkus.version>		
+		<quarkus.version>2.2.2.Final</quarkus.version>		
 		<quarkus.bom.groupId>io.quarkus</quarkus.bom.groupId>
 		<quarkus.bom.artifactId>quarkus-bom</quarkus.bom.artifactId>
 		<quarkus.bom.version>${quarkus.version}</quarkus.bom.version>
