@@ -27,6 +27,7 @@ class FileProcessor {
     static {
     	addUnremovable(UNREMOVALES_NAMES
     			,org.cyk.utility.file.PathsScanner.class
+    			,org.cyk.utility.file.PathsProcessor.class
     			);
     }
     

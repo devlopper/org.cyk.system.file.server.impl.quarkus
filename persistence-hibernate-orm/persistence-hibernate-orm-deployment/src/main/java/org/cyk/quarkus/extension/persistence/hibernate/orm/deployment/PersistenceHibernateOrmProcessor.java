@@ -41,55 +41,11 @@ class PersistenceHibernateOrmProcessor {
     private static final Collection<String> UNREMOVALES_NAMES = new ArrayList<>();
     static {
     	UNREMOVALES.addAll(List.of(
-    			//org.cyk.utility.__kernel__.object.__static__.persistence.EntityLifeCycleListener.class
-    			//,org.cyk.utility.__kernel__.object.__static__.persistence.EntityLifeCycleListenerImpl.class
-    			
-    			//,org.cyk.utility.persistence.entity.EntityLifeCycleListener.class
-    			//,org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl.class
-    			
-    			//,org.cyk.utility.persistence.server.hibernate.Initializer.class
-    			//,org.cyk.utility.persistence.server.hibernate.InitializerImpl.class
-    			//,org.cyk.utility.persistence.query.QueryManager.class
-    			//,org.cyk.utility.persistence.query.QueryManagerImpl.class
-    			/*,*/org.cyk.utility.persistence.server.QueryManagerImpl.class
-    			
-    			//,org.cyk.utility.persistence.query.QueryIdentifierBuilder.class
-    			//,org.cyk.utility.persistence.query.QueryIdentifierBuilderImpl.class
-    			
-    			//,org.cyk.utility.persistence.query.QueryIdentifierGetter.class
-    			//,org.cyk.utility.persistence.query.QueryIdentifierGetterImpl.class
-    			
+    			org.cyk.utility.persistence.server.QueryManagerImpl.class			
     			,org.cyk.utility.persistence.query.QueryExecutor.class
     			,org.cyk.utility.persistence.server.query.QueryExecutorImpl.class
     			
-    			//,org.cyk.utility.persistence.server.query.executor.DynamicManyExecutor.class
-    			//,org.cyk.utility.persistence.server.query.executor.DynamicManyExecutorImpl.class
-    			
-    			//,org.cyk.utility.persistence.server.query.executor.DynamicOneExecutor.class
-    			//,org.cyk.utility.persistence.server.query.executor.DynamicOneExecutorImpl.class
-    			
-    			//,org.cyk.utility.persistence.server.query.executor.field.GenericFieldExecutor.class
-    			//,org.cyk.utility.persistence.server.query.executor.field.GenericFieldExecutorImpl.class
-    			/*
-    			,org.cyk.utility.persistence.server.query.executor.field.CodeExecutor.class
-    			,org.cyk.utility.persistence.server.query.executor.field.CodeExecutorImpl.class
-    			
-    			,org.cyk.utility.persistence.server.query.executor.field.IdentifierExecutor.class
-    			,org.cyk.utility.persistence.server.query.executor.field.IdentifierExecutorImpl.class
-    			
-    			,org.cyk.utility.persistence.server.query.RuntimeQueryBuilder.class
-    			,org.cyk.utility.persistence.server.query.RuntimeQueryBuilderImpl.class
-    			
-    			,org.cyk.utility.persistence.server.query.string.RuntimeQueryStringBuilder.class
-    			,org.cyk.utility.persistence.server.query.string.RuntimeQueryStringBuilderImpl.class
-    			
-    			,org.cyk.utility.persistence.server.query.string.CaseStringBuilder.class
-    			,org.cyk.utility.persistence.server.query.string.CaseStringBuilderImpl.class
-    			
-    			,org.cyk.utility.persistence.EntityManagerFactoryGetter.class,org.cyk.utility.persistence.EntityManagerFactoryGetterImpl.class
-    			,org.cyk.utility.persistence.EntityManagerGetter.class,org.cyk.utility.persistence.EntityManagerGetterImpl.class
-    			*/
-    			//,org.cyk.quarkus.extension.hibernate.orm.ApplicationLifeCycleListener.class
+    		
     			));
     	addUnremovable(UNREMOVALES_NAMES
     			,org.cyk.utility.__kernel__.object.__static__.persistence.EntityLifeCycleListener.class
@@ -98,6 +54,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.QueryManager.class
     			,org.cyk.utility.persistence.query.QueryIdentifierBuilder.class
     			,org.cyk.utility.persistence.query.QueryIdentifierGetter.class
+    			,org.cyk.utility.persistence.query.QueryGetter.class
     			,org.cyk.utility.persistence.query.QueryResultMapper.class
     			//,org.cyk.utility.persistence.query.QueryExecutor.class
     			
