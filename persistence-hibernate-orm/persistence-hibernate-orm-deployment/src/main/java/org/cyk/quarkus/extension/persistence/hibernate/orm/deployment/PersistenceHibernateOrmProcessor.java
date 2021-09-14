@@ -55,6 +55,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.QueryIdentifierBuilder.class
     			,org.cyk.utility.persistence.query.QueryIdentifierGetter.class
     			,org.cyk.utility.persistence.query.QueryGetter.class
+    			,org.cyk.utility.persistence.query.QueryValueBuilder.class
     			,org.cyk.utility.persistence.query.QueryResultMapper.class
     			//,org.cyk.utility.persistence.query.QueryExecutor.class
     			
