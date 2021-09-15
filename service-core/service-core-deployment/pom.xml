@@ -16,16 +16,15 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-resteasy-jackson-deployment</artifactId>
 		</dependency>
-		<!--
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-smallrye-openapi-deployment</artifactId>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.service</groupId>
 			<artifactId>service-core</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.cyk.quarkus.extension.rest</groupId>
+			<artifactId>rest-deployment</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.quarkus</groupId>
