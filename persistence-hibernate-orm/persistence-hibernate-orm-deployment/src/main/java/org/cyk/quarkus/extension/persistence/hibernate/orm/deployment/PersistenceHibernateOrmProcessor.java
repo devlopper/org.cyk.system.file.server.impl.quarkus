@@ -32,8 +32,20 @@ class PersistenceHibernateOrmProcessor {
 	}
     
     @BuildStep
-	AdditionalBeanBuildItem additionalsBeans() {
+	AdditionalBeanBuildItem additionalBeanApplicationLifeCycleListener() {
 		AdditionalBeanBuildItem item = AdditionalBeanBuildItem.unremovableOf(org.cyk.quarkus.extension.hibernate.orm.ApplicationLifeCycleListener.class);
+		return item;
+	}
+    
+    @BuildStep
+	AdditionalBeanBuildItem additionalBeanQueryExecutorArgumentsDto() {
+		AdditionalBeanBuildItem item = AdditionalBeanBuildItem.unremovableOf(org.cyk.utility.persistence.query.QueryExecutorArguments.Dto.class);
+		return item;
+	}
+    
+    @BuildStep
+	AdditionalBeanBuildItem additionalBeanQueryExecutorArgumentsDtoMapper() {
+		AdditionalBeanBuildItem item = AdditionalBeanBuildItem.unremovableOf(org.cyk.utility.persistence.query.QueryExecutorArguments.Dto.Mapper.class);
 		return item;
 	}
     
@@ -44,8 +56,11 @@ class PersistenceHibernateOrmProcessor {
     			org.cyk.utility.persistence.server.QueryManagerImpl.class			
     			,org.cyk.utility.persistence.query.QueryExecutor.class
     			,org.cyk.utility.persistence.server.query.QueryExecutorImpl.class
+    			,org.cyk.utility.persistence.query.QueryExecutorArguments.Dto.class
+    			,org.cyk.utility.persistence.query.QueryExecutorArguments.Dto.Mapper.class
     			
-    		
+    			,org.cyk.utility.persistence.query.Filter.Dto.class
+    			,org.cyk.utility.persistence.query.Filter.Dto.Mapper.class
     			));
     	addUnremovable(UNREMOVALES_NAMES
     			,org.cyk.utility.__kernel__.object.__static__.persistence.EntityLifeCycleListener.class
