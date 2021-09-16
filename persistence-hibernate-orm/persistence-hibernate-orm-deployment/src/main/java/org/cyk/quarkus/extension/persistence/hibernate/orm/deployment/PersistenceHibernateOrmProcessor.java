@@ -72,6 +72,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.QueryGetter.class
     			,org.cyk.utility.persistence.query.QueryValueBuilder.class
     			,org.cyk.utility.persistence.query.QueryResultMapper.class
+    			,org.cyk.utility.persistence.query.QueryResultProcessor.class
     			//,org.cyk.utility.persistence.query.QueryExecutor.class
     			
     			,org.cyk.utility.persistence.server.TransientFieldsProcessor.class
@@ -96,6 +97,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.EntityManagerFactoryGetter.class
     			,org.cyk.utility.persistence.EntityManagerGetter.class
     			);
+    	UNREMOVALES_NAMES.add("org.cyk.utility.persistence.query.QueryExecutorArguments$Dto$MapperImpl");
     }
     
     private static void addUnremovable(Class<?> interfaceClass,Collection<String> unremovablesNames) {
