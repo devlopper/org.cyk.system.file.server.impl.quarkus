@@ -3,39 +3,44 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	
+
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.cyk.quarkus.pom</groupId>
 		<artifactId>quarkus-pom-core</artifactId>
 		<version>0.0.1</version>
 	</parent>
-	
+
 	<groupId>org.cyk.quarkus.pom</groupId>
 	<artifactId>quarkus-pom-server</artifactId>
 	<version>0.0.1</version>
 	<packaging>pom</packaging>
-	
+
 	<properties>
 		<quarkus.bom.groupId>io.quarkus.platform</quarkus.bom.groupId>
 		<org.projectlombok.lombok.version>1.18.20</org.projectlombok.lombok.version>
 		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
 		<jacoco.version>0.8.4</jacoco.version>
 		<org.jacoco.jacoco-maven-plugin.version>${jacoco.version}</org.jacoco.jacoco-maven-plugin.version>
+
+		<mapstruct.version>1.4.2.Final</mapstruct.version> <!-- mapping between object -->
+		<org.mapstruct.mapstruct.version>${mapstruct.version}</org.mapstruct.mapstruct.version>
+		<org.mapstruct.mapstruct-processor.version>${mapstruct.version}</org.mapstruct.mapstruct-processor.version>
+		<org.projectlombok.lombok-mapstruct-binding.version>0.2.0</org.projectlombok.lombok-mapstruct-binding.version>
 	</properties>
-		
+
 	<dependencies>
 		<!-- Framework Extensions -->
-	
+
 		<!-- CYK Extensions -->
-		
+
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.persistence.hibernate</groupId>
 			<artifactId>persistence-hibernate-orm</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.business</groupId>
 			<artifactId>business-core</artifactId>
@@ -47,18 +52,26 @@
 			<artifactId>service-core</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
+
+		<!-- Object Mapping -->
+
+		<dependency>
+			<groupId>org.cyk.jee.utility.mapping.mapstruct</groupId>
+			<artifactId>jee-utility-mapping-mapstruct</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+
 		<!-- Development Tools -->
-		
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>${org.projectlombok.lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- Test -->
-		
+
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-junit5</artifactId>
@@ -74,22 +87,22 @@
 			<artifactId>quarkus-jdbc-h2</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
 			<version>${org.assertj.assertj-core.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-jacoco</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -107,15 +120,43 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>${compiler-plugin.version}</version>
 				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${org.projectlombok.lombok.version}</version>
+						</path>
+						<!-- This is needed when using Lombok 1.18.16 and above -->
+			            <path>
+			                <groupId>org.projectlombok</groupId>
+			                <artifactId>lombok-mapstruct-binding</artifactId>
+			                <version>${org.projectlombok.lombok-mapstruct-binding.version}</version>
+			            </path>
+			            <!-- Mapstruct should follow the lombok path(s) -->
+			            <path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${org.mapstruct.mapstruct-processor.version}</version>
+						</path>						
+					</annotationProcessorPaths>
+					<showWarnings>false</showWarnings>
+					<compilerArgs>
+						<compilerArg>
+							-Amapstruct.defaultComponentModel=cdi
+						</compilerArg>
+						<compilerArg>
+							-Amapstruct.verbose=false
+						</compilerArg>
+					</compilerArgs>
 					<parameters>${maven.compiler.parameters}</parameters>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire-plugin.version}</version>
@@ -128,7 +169,7 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 	<profiles>
 		<profile>
 			<id>native</id>
