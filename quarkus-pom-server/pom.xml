@@ -18,16 +18,20 @@
 	<packaging>pom</packaging>
 
 	<properties>
+		<!-- Quarkus -->
 		<quarkus.bom.groupId>io.quarkus.platform</quarkus.bom.groupId>
+		<!-- Getter Setter generator -->
 		<org.projectlombok.lombok.version>1.18.20</org.projectlombok.lombok.version>
-		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
+		<org.projectlombok.lombok-mapstruct-binding.version>0.2.0</org.projectlombok.lombok-mapstruct-binding.version>
+		<!-- Code coverage -->
 		<jacoco.version>0.8.4</jacoco.version>
 		<org.jacoco.jacoco-maven-plugin.version>${jacoco.version}</org.jacoco.jacoco-maven-plugin.version>
-
-		<mapstruct.version>1.4.2.Final</mapstruct.version> <!-- mapping between object -->
+		<!-- Object mapping -->
+		<mapstruct.version>1.4.2.Final</mapstruct.version>
 		<org.mapstruct.mapstruct.version>${mapstruct.version}</org.mapstruct.mapstruct.version>
 		<org.mapstruct.mapstruct-processor.version>${mapstruct.version}</org.mapstruct.mapstruct-processor.version>
-		<org.projectlombok.lombok-mapstruct-binding.version>0.2.0</org.projectlombok.lombok-mapstruct-binding.version>
+		<!-- Test assertions -->
+		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
 	</properties>
 
 	<dependencies>
@@ -123,7 +127,7 @@
 
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${compiler-plugin.version}</version>
+				<version>${org.apache.maven.plugins.maven-compiler-plugin.version}</version>
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
