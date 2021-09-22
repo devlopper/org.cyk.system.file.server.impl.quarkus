@@ -30,6 +30,8 @@
 		<mapstruct.version>1.4.2.Final</mapstruct.version>
 		<org.mapstruct.mapstruct.version>${mapstruct.version}</org.mapstruct.mapstruct.version>
 		<org.mapstruct.mapstruct-processor.version>${mapstruct.version}</org.mapstruct.mapstruct-processor.version>
+		<!-- Annotation processing -->
+		<m2e.apt.activation>jdt_apt</m2e.apt.activation>
 		<!-- Test assertions -->
 		<org.assertj.assertj-core.version>3.20.2</org.assertj.assertj-core.version>
 	</properties>
