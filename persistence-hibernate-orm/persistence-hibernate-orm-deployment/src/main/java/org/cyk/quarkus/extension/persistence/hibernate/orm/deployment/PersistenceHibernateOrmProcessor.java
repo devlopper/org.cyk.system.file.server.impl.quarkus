@@ -61,6 +61,7 @@ class PersistenceHibernateOrmProcessor {
     			
     			,org.cyk.utility.persistence.query.Filter.Dto.class
     			,org.cyk.utility.persistence.query.Filter.Dto.Mapper.class
+    			
     			));
     	addUnremovable(UNREMOVALES_NAMES
     			,org.cyk.utility.__kernel__.object.__static__.persistence.EntityLifeCycleListener.class
@@ -73,6 +74,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.QueryValueBuilder.class
     			,org.cyk.utility.persistence.query.QueryResultMapper.class
     			,org.cyk.utility.persistence.query.QueryResultProcessor.class
+    			,org.cyk.utility.persistence.query.CountQueryIdentifierGetter.class
     			//,org.cyk.utility.persistence.query.QueryExecutor.class
     			
     			,org.cyk.utility.persistence.server.TransientFieldsProcessor.class
