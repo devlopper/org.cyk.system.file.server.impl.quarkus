@@ -69,6 +69,8 @@
 		<org.eclipse.microprofile.openapi.microprofile-openapi-api.version>1.1.2</org.eclipse.microprofile.openapi.microprofile-openapi-api.version>
 		-->
 		<org.eclipse.microprofile.openapi.microprofile-openapi-api.version>2.0</org.eclipse.microprofile.openapi.microprofile-openapi-api.version>
+		<org.eclipse.microprofile.config.microprofile-config-api.version>2.0</org.eclipse.microprofile.config.microprofile-config-api.version>
+		
 		<org.microprofile-ext.openapi-ext.openapi-ui.version>1.1.4</org.microprofile-ext.openapi-ext.openapi-ui.version>
 			<!-- Wildfly -->
 		<wildfly.version>22.0.0.Final</wildfly.version>
@@ -182,6 +184,13 @@
 			    <groupId>org.eclipse.microprofile.openapi</groupId>
 			    <artifactId>microprofile-openapi-api</artifactId>
 			    <version>${org.eclipse.microprofile.openapi.microprofile-openapi-api.version}</version>
+			    <scope>provided</scope>
+			</dependency>
+			
+			<dependency>
+			    <groupId>org.eclipse.microprofile.config</groupId>
+			    <artifactId>microprofile-config-api</artifactId>
+			    <version>${org.eclipse.microprofile.config.microprofile-config-api.version}</version>
 			    <scope>provided</scope>
 			</dependency>
 			
