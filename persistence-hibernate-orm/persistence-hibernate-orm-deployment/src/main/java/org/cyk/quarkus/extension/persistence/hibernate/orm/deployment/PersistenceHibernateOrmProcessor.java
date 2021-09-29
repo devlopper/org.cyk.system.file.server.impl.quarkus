@@ -78,6 +78,8 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.CountQueryIdentifierGetter.class
     			//,org.cyk.utility.persistence.query.QueryExecutor.class
     			
+    			,org.cyk.utility.persistence.query.EntityFinder.class
+    			
     			,org.cyk.utility.persistence.server.TransientFieldsProcessor.class
     			,org.cyk.utility.persistence.server.query.executor.DynamicManyExecutor.class
     			,org.cyk.utility.persistence.server.query.executor.DynamicOneExecutor.class
