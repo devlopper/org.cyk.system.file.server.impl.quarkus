@@ -1,4 +1,4 @@
-package org.cyk.quarkus.extension.rest.deployment;
+package org.cyk.quarkus.extension.rest_.deployment;
 
 import java.util.ArrayList;
 import java.util.Collection;
