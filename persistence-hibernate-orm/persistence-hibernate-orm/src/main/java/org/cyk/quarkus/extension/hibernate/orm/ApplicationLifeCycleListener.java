@@ -15,12 +15,11 @@ import io.quarkus.runtime.StartupEvent;
 public class ApplicationLifeCycleListener {
 	public static final int ORDER = 2500;
 	
-	public static Class<?> ENTITY_READER_QUALIFIER = Qualifier.class;
-	public static Class<?> ENTITY_COUNTER_QUALIFIER = Qualifier.class;
+	public static Class<?> QUALIFIER = Qualifier.class;
 	
     void onStart(@Observes StartupEvent startupEvent) {
-    	DependencyInjection.setQualifierClassTo(ENTITY_READER_QUALIFIER, EntityReader.class);
-    	DependencyInjection.setQualifierClassTo(ENTITY_COUNTER_QUALIFIER, EntityCounter.class);
+    	DependencyInjection.setQualifierClassTo(QUALIFIER, EntityReader.class);
+    	DependencyInjection.setQualifierClassTo(QUALIFIER, EntityCounter.class);
     	org.cyk.utility.persistence.server.hibernate.Initializer.initialize();
     }
 
