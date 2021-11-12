@@ -14,8 +14,14 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-resteasy-jackson-deployment</artifactId>
+		</dependency>
+		<!--
+		<dependency>
+			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-resteasy-jsonb-deployment</artifactId>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.service</groupId>
 			<artifactId>service-core</artifactId>
