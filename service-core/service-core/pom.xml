@@ -12,16 +12,16 @@
 	<artifactId>service-core</artifactId>
 	<name>Service Core - Runtime</name>
 	<dependencies>
+		<!--
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-resteasy-jackson</artifactId>
 		</dependency>
-		<!--
+		-->
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-resteasy-jsonb</artifactId>
-		</dependency>
-		-->
+		</dependency>	
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.rest</groupId>
 			<artifactId>rest</artifactId>
