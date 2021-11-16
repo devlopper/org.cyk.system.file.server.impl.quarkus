@@ -62,6 +62,8 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.Filter.Dto.class
     			,org.cyk.utility.persistence.query.Filter.Dto.Mapper.class
     			
+    			,org.cyk.utility.persistence.server.hibernate.ProcedureExecutorImpl.class
+    			
     			,org.cyk.utility.persistence.server.SpecificPersistenceGetter.class
     			));
     	addUnremovable(UNREMOVALES_NAMES
