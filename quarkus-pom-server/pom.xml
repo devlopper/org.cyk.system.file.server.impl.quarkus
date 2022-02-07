@@ -100,12 +100,14 @@
 			<version>${org.assertj.assertj-core.version}</version>
 			<scope>test</scope>
 		</dependency>
-
+		
+		<!--
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-jacoco</artifactId>
 			<scope>test</scope>
 		</dependency>
+		-->
 
 	</dependencies>
 
@@ -171,6 +173,15 @@
 						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
 						<maven.home>${maven.home}</maven.home>
 					</systemPropertyVariables>
+					<!--
+					<parallel>classes</parallel>
+					<forkCount>5</forkCount>
+			        <reuseForks>true</reuseForks>
+			        <argLine>-Xmx2048m</argLine>
+			        -->
+			        <!--
+			        <workingDirectory>FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
+					-->
 				</configuration>
 			</plugin>
 		</plugins>
