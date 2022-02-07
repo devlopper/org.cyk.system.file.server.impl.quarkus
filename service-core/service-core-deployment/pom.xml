@@ -12,12 +12,6 @@
 	<artifactId>service-core-deployment</artifactId>
 	<name>Service Core - Deployment</name>
 	<dependencies>
-		<!--
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-resteasy-jackson-deployment</artifactId>
-		</dependency>
-		-->
 		<dependency>
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-resteasy-jsonb-deployment</artifactId>
