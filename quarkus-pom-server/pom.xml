@@ -93,6 +93,13 @@
 			<artifactId>quarkus-jdbc-h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.cyk.quarkus.extension.test</groupId>
+			<artifactId>test</artifactId>
+			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.assertj</groupId>
