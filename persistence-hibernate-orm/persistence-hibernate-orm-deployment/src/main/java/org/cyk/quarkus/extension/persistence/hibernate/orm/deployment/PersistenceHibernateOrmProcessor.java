@@ -63,6 +63,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.query.Filter.Dto.Mapper.class
     			
     			,org.cyk.utility.persistence.server.hibernate.ProcedureExecutorImpl.class
+    			,org.cyk.utility.persistence.server.hibernate.MaterializedViewManagerImpl.class
     			
     			,org.cyk.utility.persistence.server.SpecificPersistenceGetter.class
     			));
