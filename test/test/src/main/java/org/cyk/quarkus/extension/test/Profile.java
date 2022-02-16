@@ -25,8 +25,13 @@ public interface Profile {
 	public static Map<String,String> buildConfig(List<Class<?>> classes) {
 		Map<String, String> config = new HashMap<>();
 		config.put("quarkus.hibernate-orm.sql-load-script", String.format("sql/%s.sql", classes.stream().map(klass -> klass.getSimpleName().toLowerCase()).collect(Collectors.joining("-"))));
-		config.put("quarkus.http.test-port", "0");
+		setPort(config, 8081);
 		return config;
+	}
+	
+	public static Map<String,String> setPort(Map<String,String> map,Integer value) {
+		map.put("quarkus.http.test-port", value == null ? "0" : value.toString());
+		return map;
 	}
 	
 	public static Map<String,String> buildConfig(Class<?>...classes) {
