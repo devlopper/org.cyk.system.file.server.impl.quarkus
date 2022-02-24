@@ -102,6 +102,7 @@ class PersistenceHibernateOrmProcessor {
     			,org.cyk.utility.persistence.server.query.string.SelectStringBuilder.class
     			,org.cyk.utility.persistence.server.query.string.QueryStringBuilder.class
     			,org.cyk.utility.persistence.server.query.string.WhereStringBuilder.class
+    			,org.cyk.utility.persistence.server.query.string.HavingStringBuilder.class
     			,org.cyk.utility.persistence.EntityManagerFactoryGetter.class
     			,org.cyk.utility.persistence.EntityManagerGetter.class
     			);
