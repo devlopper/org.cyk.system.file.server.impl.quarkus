@@ -29,6 +29,13 @@
 		<quarkus.bom.groupId>io.quarkus</quarkus.bom.groupId>
 		<quarkus.bom.artifactId>quarkus-bom</quarkus.bom.artifactId>
 		<quarkus.bom.version>${quarkus.version}</quarkus.bom.version>
+		
+		<!-- Mock Server -->
+		<mock-server.version>5.12.0</mock-server.version>
+		<org.mock-server.mockserver-netty.version>${mock-server.version}</org.mock-server.mockserver-netty.version>
+		<org.mock-server.mockserver-client-java.version>${mock-server.version}</org.mock-server.mockserver-client-java.version>
+		<org.mock-server.mockserver-maven-plugin.version>${mock-server.version}</org.mock-server.mockserver-maven-plugin.version>
+		<org.mock-server.mockserver-maven-plugin.configuration.port>10000</org.mock-server.mockserver-maven-plugin.configuration.port>
 	</properties>
 	
 	<dependencyManagement>
@@ -42,6 +49,46 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	
+	<profiles>
+		<!-- Test -->
+		<profile>
+			<id>org.mock-server.build</id>
+			<properties>
+				<org.mock-server.mockserver-maven-plugin.configuration.logLevel>WARN</org.mock-server.mockserver-maven-plugin.configuration.logLevel>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.mock-server</groupId>
+						<artifactId>mockserver-maven-plugin</artifactId>
+						<version>${org.mock-server.mockserver-maven-plugin.version}</version>
+						<configuration>
+							<serverPort>${org.mock-server.mockserver-maven-plugin.configuration.port}</serverPort>
+							<initializationClass>${org.mock-server.mockserver-maven-plugin.configuration.initializationClass}</initializationClass>
+							<logLevel>${org.mock-server.mockserver-maven-plugin.configuration.logLevel}</logLevel>
+						</configuration>
+						<executions>
+							<execution>
+								<id>process-test-classes</id>
+								<phase>process-test-classes</phase>
+								<goals>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>verify</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	
 	<modules>
 		<module>../quarkus-pom-extension</module>
