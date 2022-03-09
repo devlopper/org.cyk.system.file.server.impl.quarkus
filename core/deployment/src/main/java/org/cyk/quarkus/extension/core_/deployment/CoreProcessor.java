@@ -45,6 +45,7 @@ class CoreProcessor {
     			,org.cyk.utility.__kernel__.mapping.MapperClassNameGetter.class
     			,org.cyk.utility.__kernel__.mapping.MappingSourceBuilder.class
     			,org.cyk.utility.__kernel__.value.Checker.class
+    			,org.cyk.utility.__kernel__.protocol.http.HttpClientGetter.class
     			);
     }
     
