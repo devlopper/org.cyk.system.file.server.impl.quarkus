@@ -38,7 +38,7 @@ git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_quarkus_extension
 
 echo #### file server api publishing
-cd E:\repository\source\git\org\cyk\system\file\api\file-server-api
+cd E:\repository\source\git\org\cyk\system\file\server\api\file-server-api
 git add .
 git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_file_server_api
