@@ -18,10 +18,11 @@ cd E:\repository\source\git\org\cyk\pom
 git add .
 git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_pom
-cd %current_directory%
 
 echo quarkus pom publishing
-cd E:\Repositories\source\git\org\cyk\quarkus\pom
+cd E:\repository\source\git\org\cyk\quarkus\pom
 git add .
 git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_quarkus_pom
+
+cd %current_directory%
