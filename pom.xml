@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.cyk.pom.jee</groupId>
+		<artifactId>pom-jee</artifactId>
+		<version>pom.jee.0.1.0</version>
+	</parent>
+
+	<groupId>org.cyk.system.file.server.client</groupId>
+	<artifactId>file-server-client-rest</artifactId>
+	<version>0.0.1</version>
+	<packaging>jar</packaging>
+
+	<name>File Server Application Programming Interface Client Using REST</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.cyk.system.file.server.api</groupId>
+			<artifactId>file-server-api</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.cyk.jee.utility.service.client</groupId>
+			<artifactId>jee-utility-service-client</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.microprofile.rest.client</groupId>
+			<artifactId>microprofile-rest-client-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.microprofile.config</groupId>
+			<artifactId>microprofile-config-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+</project>
