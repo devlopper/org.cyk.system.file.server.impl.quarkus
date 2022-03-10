@@ -19,10 +19,41 @@ git add .
 git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_pom
 
-echo quarkus pom publishing
+echo #### quarkus pom publishing
 cd E:\repository\source\git\org\cyk\quarkus\pom
 git add .
 git commit --all -m %commit_message%
 git push cyk_file_server_quarkus develop:cyk_quarkus_pom
+
+echo #### utility publishing
+cd E:\repository\source\git\org\cyk\utility
+git add .
+git commit --all -m %commit_message%
+git push cyk_file_server_quarkus develop_0_1_0:cyk_utility
+
+echo #### quarkus extension publishing
+cd E:\repository\source\git\org\cyk\quarkus\extension
+git add .
+git commit --all -m %commit_message%
+git push cyk_file_server_quarkus develop:cyk_quarkus_extension
+
+echo #### file server api publishing
+cd E:\repository\source\git\org\cyk\system\file\api\file-server-api
+git add .
+git commit --all -m %commit_message%
+git push cyk_file_server_quarkus develop:cyk_file_server_api
+
+echo #### file server client rest publishing
+cd E:\repository\source\git\org\cyk\system\file\server\client\file-server-client-rest
+git add .
+git commit --all -m %commit_message%
+git push cyk_file_server_quarkus develop:cyk_file_server_client_rest
+
+echo #### file server impl publishing
+cd E:\repository\source\git\org\cyk\system\file\server\impl\file-server-impl-quarkus
+git add .
+git commit --all -m %commit_message%
+git push github
+git push github develop:develop
 
 cd %current_directory%
