@@ -1,4 +1,4 @@
-CREATE SCHEMA `kwordz_file` ;
+CREATE SCHEMA `kwordz_file`;
 
 CREATE TABLE `at_file` (
   `identifier` varchar(36) NOT NULL,
@@ -14,11 +14,11 @@ CREATE TABLE `at_file` (
   `audit_actor` varchar(320) NOT NULL,
   `audit_date` date NOT NULL,
   PRIMARY KEY (`identifier`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `at_file_bytes` (
   `identifier` varchar(255) NOT NULL,
   `bytes` longblob NOT NULL,
   PRIMARY KEY (`identifier`),
   CONSTRAINT `fk_identifier` FOREIGN KEY (`identifier`) REFERENCES `at_file` (`identifier`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -100,7 +100,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String COLUMN_NAME = "name";
 	public static final String COLUMN_EXTENSION = "extension";
 	public static final String COLUMN_MIME_TYPE = "mime";
-	public static final String COLUMN_UNIFORM_RESOURCE_LOCATOR = "uri";
+	public static final String COLUMN_UNIFORM_RESOURCE_LOCATOR = "url";
 	public static final String COLUMN_SIZE = "size";
 	public static final String COLUMN_SHA1 = "sha1";
 	
