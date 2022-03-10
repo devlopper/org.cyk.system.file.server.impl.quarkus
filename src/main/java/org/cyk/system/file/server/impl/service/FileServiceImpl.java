@@ -45,7 +45,7 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 	@Override
 	public Response download(String identifier, Boolean isInline) {
 		Result result = business.download(identifier);
-		if(result == null)
+		if(result == null || result.getValue() == null)
 			return Response.status(Status.NOT_FOUND).build();
 		FileImpl file = (FileImpl) result.getValue();
 		ResponseBuilder responseBuilder = Response.ok(file.getBytes());

@@ -20,8 +20,5 @@ public interface FileDtoImplMapper extends Mapper<FileImpl, FileDtoImpl> {
 		if(!context.endsWith("/"))
 			context = context+"/";
 		target.downloadLink = context+FileService.PATH+"/"+String.format(FileService.DOWNLOAD_PATH_FORMAT, source.getIdentifier());
-		//Link downloadLink = FileServiceImpl.buildDownloadLink(persistence.getIdentifier());
-		//service.setDownloadLink(downloadLink.getValue());
-		//service.get__links__(Boolean.TRUE).add(downloadLink);
 	}
 }
