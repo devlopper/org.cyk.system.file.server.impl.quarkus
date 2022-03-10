@@ -6,9 +6,7 @@ import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -32,7 +30,6 @@ import lombok.experimental.Accessors;
 public class FileBytesImpl extends AbstractIdentifiableSystemScalarStringImpl implements FileBytes,Serializable {
 	private static final long serialVersionUID = 1L;
 
-	@NotNull @OneToOne @JoinColumn(name=COLUMN_FILE,unique=true) private FileImpl file;
 	@NotNull @Lob @Column(name=COLUMN_BYTES) private byte[] bytes;
 	
 	/**/
@@ -43,12 +40,10 @@ public class FileBytesImpl extends AbstractIdentifiableSystemScalarStringImpl im
 	}
 	
 	/**/
-	public static final String FIELD_FILE = "file";
 	public static final String FIELD_BYTES = "bytes";
 	
-	public static final String ENTITY_NAME = "FileBytes";
+	public static final String ENTITY_NAME = "FileBytesImpl";
 	public static final String TABLE_NAME = "at_file_bytes";
 	
-	public static final String COLUMN_FILE = "file";
 	public static final String COLUMN_BYTES = "bytes";
 }
