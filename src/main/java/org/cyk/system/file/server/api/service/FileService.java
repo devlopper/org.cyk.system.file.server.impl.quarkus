@@ -63,6 +63,37 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 			,@APIResponse(description = "Error while downloading file",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
 	Response download(@PathParam(PARAMETER_IDENTIFIER) String identifier,@QueryParam(PARAMETER_IS_INLINE) Boolean isInline);
+	
+	@POST
+	@Path("sha1-computation")
+	@Produces({MediaType.TEXT_PLAIN})
+	@Operation(description = "sha1 computation")
+	@APIResponses(value = {
+			@APIResponse(description = "sha1 computed",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while computing sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response computeSha1(@Parameter(name = PARAMETER_USERNAME) @QueryParam(PARAMETER_USERNAME) String auditWho);
+	
+	@GET
+	@Path("sha1-dulicated")
+	@Produces({MediaType.TEXT_PLAIN})
+	@Operation(description = "Read duplicated sha1")
+	@APIResponses(value = {
+			@APIResponse(description = "duplicated sha1 read",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while reading duplicated sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response readDuplicatedSha1();
+	
+	@GET
+	@Path("sha1-dulicated-count")
+	@Produces({MediaType.TEXT_PLAIN})
+	@Operation(description = "Count duplicated sha1")
+	@APIResponses(value = {
+			@APIResponse(description = "duplicated sha1 counted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while counting duplicated sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response countDuplicatedSha1();
+	
 	/*
 	@POST
 	@Path("extraction-of-all-bytes")
