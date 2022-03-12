@@ -44,15 +44,39 @@ public interface FileValidator {
 		throwablesMessages.throwIfNotEmpty();
 	}
 	
-	/* Get bytes */
+	/* Download */
 	
-	static void validateGetBytesInputs(String identifier,ThrowablesMessages throwablesMessages) {
+	static void validateDownloadInputs(String identifier,ThrowablesMessages throwablesMessages) {
 		Validator.AbstractImpl.validateIdentifier(identifier, File.NAME, throwablesMessages);
 	}
 	
-	static void validateGetBytesInputs(String identifier) {
+	static void validateDownloadInputs(String identifier) {
 		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
-		validateGetBytesInputs(identifier,throwablesMessages);
+		validateDownloadInputs(identifier,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
+	
+	/* Compute sha1 */
+	
+	static void validateComputeSha1Inputs(String auditWho,ThrowablesMessages throwablesMessages) {
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateComputeSha1Inputs(String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateComputeSha1Inputs(auditWho,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
+	
+	/* Delete duplicated */
+	
+	static void validateDeleteDuplicatedInputs(String auditWho,ThrowablesMessages throwablesMessages) {
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateDeleteDuplicatedInputs(String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateDeleteDuplicatedInputs(auditWho,throwablesMessages);
 		throwablesMessages.throwIfNotEmpty();
 	}
 }

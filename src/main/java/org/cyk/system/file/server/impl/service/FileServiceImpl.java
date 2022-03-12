@@ -55,7 +55,22 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 		return responseBuilder.build();
 	}
 	
+	@Override
+	public Response computeSha1(String auditWho) {
+		return buildResponseOk(business.computeSha1(auditWho));
+	}
+	
+	@Override
+	public Response readDuplicatedSha1() {
+		return buildResponseOk(business.readDuplicatedSha1());
+	}
+	
+	@Override
+	public Response countDuplicatedSha1() {
+		return buildResponseOk(business.countDuplicatedSha1());
+	}
+	
 	/**/
 	
-	static final String CONTENT_DISPOSITION_FORMAT = "%s; "+ConstantString.FILENAME+"=%s";
+	static final String CONTENT_DISPOSITION_FORMAT = "%s; "+ConstantString.FILENAME+"=%s";	
 }

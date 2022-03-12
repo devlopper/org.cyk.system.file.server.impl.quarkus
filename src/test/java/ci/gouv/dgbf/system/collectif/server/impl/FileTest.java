@@ -15,6 +15,7 @@ import org.cyk.system.file.server.api.persistence.FilePersistence;
 import org.cyk.system.file.server.api.service.FileDto;
 import org.cyk.system.file.server.api.service.FileService;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
+import org.cyk.utility.__kernel__.enumeration.Action;
 import org.cyk.utility.__kernel__.protocol.http.HttpHelper;
 import org.cyk.utility.business.Result;
 import org.junit.jupiter.api.AfterAll;
@@ -72,7 +73,7 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(10)
 	public void persistence_readUniformResourceLocators() {
-		assertThat(persistence.readUniformResourceLocators()).containsExactly("http://localhost:10000/f01.txt","uri01","uri03");
+		assertThat(persistence.readUniformResourceLocators()).containsExactly("http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(10)
@@ -165,6 +166,8 @@ public class FileTest extends AbstractTest {
 		assertThat(response.header(HttpHeaders.CONTENT_LENGTH)).isEqualTo("8");
 	}
 	
+	/**/
+	
 	/* Count in directories*/
 	
 	@Test @Order(20)
@@ -179,8 +182,6 @@ public class FileTest extends AbstractTest {
 	
 	/* Import */
 	
-	/* Business */
-	
 	@Test @Order(20)
 	public void business_import_all_null_exception() {
 		Exception exception = Assertions.assertThrows(RuntimeException.class, () -> {
@@ -192,42 +193,42 @@ public class FileTest extends AbstractTest {
 	@Test @Order(20)
 	public void business_import_specific() {
 		business.import_(List.of("src/test/resources/files/d1"), null, null, null,"christian");
-		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(21)
 	public void business_import_all() {
 		business.import_(null, null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
-				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(22)
 	public void business_import_all_again() {
 		business.import_(null, null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
-				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(23)
 	public void business_import_specific_outside() {
 		business.import_(List.of("src/test/resources/files_outside/d1"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
-				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(24)
 	public void business_import_all_outside() {
 		business.import_(List.of("src/test/resources/files_outside"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
-				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(25)
 	public void business_import_all_again_outside() {
 		business.import_(List.of("src/test/resources/files_outside"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
-				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(26)
@@ -239,8 +240,8 @@ public class FileTest extends AbstractTest {
 		assertThat(file.getIdentifier()).isEqualTo(identifier);
 		assertThat(file.getNameAndExtension()).isEqualTo("f1.txt");
 		assertThat(file.getMimeType()).isEqualTo("text/plain");
-		assertThat(file.getSize()).isEqualTo(15);
-		assertThat(new String(file.getBytes())).isEqualTo("This is a test!");
+		assertThat(file.getSize()).isEqualTo(23);
+		assertThat(new String(file.getBytes())).isEqualTo("files - This is a test!");
 	}
 	
 	@Test @Order(27)
@@ -248,7 +249,7 @@ public class FileTest extends AbstractTest {
 		service.import_(List.of("src/test/resources/files_service/d1"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
 				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),buildUrl("files_service/d1/d1_f1.txt")
-				,"http://localhost:10000/f01.txt","uri01","uri03");
+				,"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(28)
@@ -256,7 +257,7 @@ public class FileTest extends AbstractTest {
 		service.import_(List.of("src/test/resources/files_service"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
 				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),buildUrl("files_service/d1/d1_f1.txt")
-				,buildUrl("files_service/f1.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files_service/f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
 	
 	@Test @Order(29)
@@ -264,6 +265,48 @@ public class FileTest extends AbstractTest {
 		service.import_(List.of("src/test/resources/files_service"), null, null, null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
 				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/d1/d1_f1_outside.txt"),buildUrl("files_outside/f1_outside.txt"),buildUrl("files_service/d1/d1_f1.txt")
-				,buildUrl("files_service/f1.txt"),"http://localhost:10000/f01.txt","uri01","uri03");
+				,buildUrl("files_service/f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
+	}
+	
+	/* Compute Sha1 */
+	
+	@Test @Order(30)
+	public void business_countDuplicatedSha1() {
+		Result result = business.countDuplicatedSha1();
+		assertThat(result.getValue()).isEqualTo(0l);
+	}
+	
+	@SuppressWarnings("resource")
+	@Test @Order(31)
+	public void business_computeSha1() {
+		new MockServerClient("localhost", WEB_SERVER_PORT)
+	    .when(HttpRequest.request().withMethod("GET").withPath("/f01.txt"))
+	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("Good job"));
+		
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f02.txt", null);
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f01.txt", null);
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f03.txt", null);
+		business.computeSha1("christian");
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f02.txt", null);
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f01.txt", "e86b3d9ac0c078a920c6ef791ee224c144ddfbbd");
+		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f03.txt", null);
+	}
+	
+	@Test @Order(32)
+	public void business_countDuplicatedSha1Again() {
+		Result result = business.countDuplicatedSha1();
+		assertThat(result.getValue()).isEqualTo(1l);
+	}
+	
+	@Test @Order(33)
+	public void business_deleteDuplicated() {
+		Long count = persistence.count();
+		Result result = business.deleteDuplicated("meliane");
+		assertThat(result.getCountsMap()).as("count map").isNotNull();
+		assertThat(result.getCountsMap().get(FileImpl.class)).as("file's count map").isNotNull();
+		assertThat(result.getCountsMap().get(FileImpl.class).get(Action.DELETE)).isEqualTo(1);
+		result = business.countDuplicatedSha1();
+		assertThat(result.getValue()).isEqualTo(0l);
+		assertThat(persistence.count()).isEqualTo(count-1);
 	}
 }
