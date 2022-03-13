@@ -2,6 +2,7 @@ package org.cyk.system.file.server.api.service;
 
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -48,7 +49,8 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 			,@Parameter(name = PARAMETER_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION) @QueryParam(PARAMETER_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION) String acceptedPathNameRegularExpression
 			,@Parameter(name = PARAMETER_MINIMAL_SIZE) @QueryParam(PARAMETER_MINIMAL_SIZE) Long minimalSize
 			,@Parameter(name = PARAMETER_MAXIMAL_SIZE) @QueryParam(PARAMETER_MAXIMAL_SIZE) Long maximalSize
-			,@Parameter(name = PARAMETER_USERNAME) @QueryParam(PARAMETER_USERNAME) String auditWho);
+			,@Parameter(name = PARAMETER_IS_DUPLICATE_ALLOWED) @QueryParam(PARAMETER_IS_DUPLICATE_ALLOWED) Boolean isDuplicateAllowed
+			,@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
 	
 	String DOWNLOAD = "download";
 	String DOWNLOAD_PATH_FORMAT = "%s/"+DOWNLOAD;
@@ -72,27 +74,37 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 			@APIResponse(description = "sha1 computed",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
 			,@APIResponse(description = "Error while computing sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
-	Response computeSha1(@Parameter(name = PARAMETER_USERNAME) @QueryParam(PARAMETER_USERNAME) String auditWho);
+	Response computeSha1(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
 	
 	@GET
-	@Path("sha1-dulicated")
-	@Produces({MediaType.TEXT_PLAIN})
-	@Operation(description = "Read duplicated sha1")
+	@Path("duplicates-identifiers")
+	@Produces({MediaType.APPLICATION_JSON})
+	@Operation(description = "Get duplicates identifiers")
 	@APIResponses(value = {
-			@APIResponse(description = "duplicated sha1 read",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
-			,@APIResponse(description = "Error while reading duplicated sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+			@APIResponse(description = "Duplicates identifiers got",responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+			,@APIResponse(description = "Error while getting duplicates identifiers",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
-	Response readDuplicatedSha1();
+	Response getDuplicatesIdentifiers();
 	
 	@GET
-	@Path("sha1-dulicated-count")
+	@Path("duplicates-number")
 	@Produces({MediaType.TEXT_PLAIN})
-	@Operation(description = "Count duplicated sha1")
+	@Operation(description = "Get number of duplicates")
 	@APIResponses(value = {
-			@APIResponse(description = "duplicated sha1 counted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
-			,@APIResponse(description = "Error while counting duplicated sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+			@APIResponse(description = "Number of duplicates got",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while getting number of duplicates",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
-	Response countDuplicatedSha1();
+	Response countDuplicates();
+	
+	@DELETE
+	@Path("duplicates")
+	@Produces({MediaType.TEXT_PLAIN})
+	@Operation(description = "Delete duplicates")
+	@APIResponses(value = {
+			@APIResponse(description = "Duplicates deleted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while deleting duplicates",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response deleteDuplicates(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
 	
 	/*
 	@POST
@@ -121,5 +133,8 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 	String PARAMETER_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION = "accepted";
 	String PARAMETER_MINIMAL_SIZE = "minimal_size";
 	String PARAMETER_MAXIMAL_SIZE = "maximal_size";
+	String PARAMETER_IS_SHA1_COMPUTATION_BLOCKING = "is_sha1_computation_blocking";
+	String PARAMETER_IS_DUPLICATES_DELETION_BLOCKING = "is_duplicates_deletion_blocking";
+	String PARAMETER_IS_DUPLICATE_ALLOWED = "is_duplicate_allowed";
 	String PARAMETER_USERNAME = "username";
 }
