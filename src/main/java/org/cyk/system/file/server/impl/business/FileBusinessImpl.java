@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -27,6 +30,8 @@ import org.cyk.utility.__kernel__.identifier.resource.UniformResourceLocatorHelp
 import org.cyk.utility.__kernel__.log.LogHelper;
 import org.cyk.utility.__kernel__.number.NumberHelper;
 import org.cyk.utility.__kernel__.object.marker.AuditableWhoDoneWhatWhen;
+import org.cyk.utility.__kernel__.object.marker.Identifiable;
+import org.cyk.utility.__kernel__.object.marker.IdentifiableSystem;
 import org.cyk.utility.__kernel__.string.StringHelper;
 import org.cyk.utility.business.Initializer;
 import org.cyk.utility.business.Result;
@@ -35,6 +40,7 @@ import org.cyk.utility.business.server.EntityCreator;
 import org.cyk.utility.file.FileHelper;
 import org.cyk.utility.file.PathsProcessor;
 import org.cyk.utility.file.PathsScanner;
+import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -67,6 +73,15 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@ConfigProperty(name = "cyk.file.duplicate.allowed",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
 	Boolean isDuplicateAllowed;
 	
+	@ConfigProperty(name = "cyk.import.batch.size",defaultValue = "100")
+	Integer importBatchSize;
+	@ConfigProperty(name = "cyk.import.executor.thread.count",defaultValue = "4")
+	Integer importExecutorThreadCount;
+	@ConfigProperty(name = "cyk.import.executor.timeout.duration",defaultValue = "5")
+	Long importExecutorTimeoutDuration;
+	@ConfigProperty(name = "cyk.import.executor.timeout.unit",defaultValue = "MINUTES")
+	TimeUnit importExecutorTimeoutUnit;
+	
 	List<String> emptyPathsNames;
 	
 	@Override
@@ -86,7 +101,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		return result;
 	}
 	
-	@Override @Transactional
+	@Override
 	public Result import_(Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,Boolean isDuplicateAllowed,String auditWho) {
 		Result result = new Result().open();
 		FileValidator.validateImportInputs(directories,pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize,isDuplicateAllowed, auditWho);
@@ -95,13 +110,15 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		acceptedPathNameRegularExpression = normalizeAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression);
 		minimalSize = normalizeMinimalSize(minimalSize);
 		maximalSize = normalizeMaximalSize(maximalSize, minimalSize);
-		Boolean isDuplicateAllowedFinal = normalizeIsDuplicateAllowed(isDuplicateAllowed);
+		isDuplicateAllowed = normalizeIsDuplicateAllowed(isDuplicateAllowed);
 		
-		Collection<Path> paths = PathsScanner.getInstance().scan(new PathsScanner.Arguments().addPathsFromNames(pathsNames).setAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression)
+		List<Path> paths = (List<Path>) PathsScanner.getInstance().scan(new PathsScanner.Arguments().addPathsFromNames(pathsNames).setAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression)
 				.setMinimalSize(minimalSize).setMaximalSize(maximalSize));
 		
+		LogHelper.log(String.format("Importation is running. Directories : %s | Paths count : %s", pathsNames,CollectionHelper.getSize(paths)), Result.getLogLevel(), getClass());
+		
 		Collection<String> existingsSha1 = new HashSet<>();
-		if(Boolean.FALSE.equals(isDuplicateAllowedFinal)) {
+		if(Boolean.FALSE.equals(isDuplicateAllowed)) {
 			CollectionHelper.add(existingsSha1,Boolean.TRUE,persistence.readSha1s());
 		}
 		
@@ -111,6 +128,25 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		Collection<FileImpl> files = new ArrayList<>();
 		String auditIdentifier = generateAuditIdentifier();
 		LocalDateTime auditWhen = LocalDateTime.now();
+		
+		List<List<Path>> batches = CollectionHelper.getBatches(paths, importBatchSize);
+		
+		LogHelper.log(String.format("\tNumber of batches : %s", CollectionHelper.getSize(batches)), Result.getLogLevel(), getClass());
+		
+		ExecutorService executorService = Executors.newFixedThreadPool(importExecutorThreadCount);
+		Boolean isDuplicateAllowedFinal = isDuplicateAllowed;
+		batches.forEach(batch -> {
+			executorService.execute(() -> {
+				EntityManager __entityManager__ = EntityManagerGetter.getInstance().get();
+				import_(batch, existingsURLs, existingsSha1, isDuplicateAllowedFinal, result, auditIdentifier, auditWho, auditWhen, __entityManager__);
+			});
+		});
+		shutdownExecutorService(executorService, importExecutorTimeoutDuration, importExecutorTimeoutUnit);
+		
+		//for(List<Path> batch : batches)
+		//	import_(batch, existingsURLs, existingsSha1, isDuplicateAllowed, result, auditIdentifier, auditWho, auditWhen, entityManager);
+		
+		/*
 		PathsProcessor.getInstance().process(paths,new CollectionProcessor.Arguments.Processing.AbstractImpl<Path>() {
 			@Override
 			protected void __process__(Path path) {
@@ -148,11 +184,51 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		});
 		
 		EntityCreator.getInstance().create(new QueryExecutorArguments().setObjects(CollectionHelper.cast(Object.class, files)));
-		
+		*/
 		// Return of message
 		result.close().setName(String.format("Importation of %s file(s)",files.size())).log(getClass());
 		result.addMessages(String.format("Number of files imported : %s",files.size()));
 		return result;
+	}
+	
+	@Transactional
+	void import_(Collection<Path> paths,Collection<String> existingsURLs,Collection<String> existingsSha1,Boolean isDuplicateAllowed,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+		PathsProcessor.getInstance().process(paths,new CollectionProcessor.Arguments.Processing.AbstractImpl<Path>() {
+			@Override
+			protected void __process__(Path path) {
+				String url = path.toFile().toURI().toString();
+				if(existingsURLs.contains(url))
+					return;
+				String sha1 = null;
+				if(Boolean.FALSE.equals(isDuplicateAllowed)) {
+					sha1= FileHelper.computeSha1(getBytes(url, result));
+					System.gc();
+					if(StringHelper.isBlank(sha1)) {
+						result.addMessages(String.format("Unable to compte sha1 of %s", url));
+						return;
+					}
+					if(existingsSha1.contains(sha1))
+						return;
+				}
+				//Instantiate
+				FileImpl file = new FileImpl();
+				file.setIdentifier(IdentifiableSystem.generateRandomly());
+				file.setNameAndExtension(path.toFile().getName());
+				file.setSize(path.toFile().length());
+				file.setUniformResourceLocator(path.toFile().toURI().toString());
+				file.setSha1(sha1);
+				Initializer.getInstance().initialize(FileImpl.class, file,IMPORT_AUDIT_IDENTIFIER);
+				if(StringHelper.isBlank(file.getMimeType())) {
+					result.addMessages(String.format("%s has no mime type", url));
+					return;
+				}
+				existingsURLs.add(file.getUniformResourceLocator());
+				if(Boolean.FALSE.equals(isDuplicateAllowed) && StringHelper.isNotBlank(file.getSha1()))
+					existingsSha1.add(file.getSha1());
+				audit(file, auditIdentifier, IMPORT_AUDIT_IDENTIFIER, auditWho, auditWhen);
+				entityManager.persist(file);
+			}
+		});
 	}
 	
 	@Override
