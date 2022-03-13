@@ -30,6 +30,11 @@ public class FilePersistenceImpl extends AbstractSpecificPersistenceImpl<File>  
 	}
 	
 	@Override
+	public Collection<String> readSha1s() {
+		return entityManager.createNamedQuery(FileImpl.QUERY_READ_SHA1,String.class).getResultList();
+	}
+	
+	@Override
 	public Collection<String> readSha1HavingCountSha1GreaterThanOne() {
 		return entityManager.createNamedQuery(FileImpl.QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE,String.class).getResultList();
 	}
@@ -40,13 +45,13 @@ public class FilePersistenceImpl extends AbstractSpecificPersistenceImpl<File>  
 	}
 
 	@Override
-	public Integer updateAuditsByIdentifiers(Collection<String> identifiers,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen) {
+	public Integer updateAuditsByIdentifiers(Collection<String> identifiers,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
 		return entityManager.createNamedQuery(FileImpl.QUERY_UPDATE_AUDITS_BY_IDENTIFIERS).setParameter("identifiers", identifiers).setParameter("auditIdentifier", auditIdentifier)
 				.setParameter("auditFunctionality", auditFunctionality).setParameter("auditWhat", EntityLifeCycleListener.Event.UPDATE.getValue()).setParameter("auditWho", auditWho).setParameter("auditWhen", auditWhen).executeUpdate();
 	}
 
 	@Override
-	public Integer deleteByIdentifiers(Collection<String> identifiers) {
+	public Integer deleteByIdentifiers(Collection<String> identifiers,EntityManager entityManager) {
 		return entityManager.createNamedQuery(FileImpl.QUERY_DELETE_BY_IDENTIFIERS).setParameter("identifiers", identifiers).executeUpdate();
 	}
 }

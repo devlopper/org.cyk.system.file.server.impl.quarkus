@@ -22,7 +22,7 @@
 			<artifactId>file-server-api</artifactId>
 			<version>0.0.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.cyk.quarkus.extension.file</groupId>
 			<artifactId>file</artifactId>
@@ -43,28 +43,23 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-smallrye-openapi</artifactId>
 		</dependency>
-		
-		<dependency>
-		    <groupId>io.quarkus</groupId>
-		    <artifactId>quarkus-scheduler</artifactId>
-		</dependency>
-		
+
 		<!-- TEST -->
-		
+
 		<dependency>
 			<groupId>org.cyk.system.file.server.client</groupId>
 			<artifactId>file-server-client-rest</artifactId>
 			<version>0.0.1</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.mock-server</groupId>
 			<artifactId>mockserver-netty</artifactId>
 			<version>${org.mock-server.mockserver-netty.version}</version>
 			<scope>test</scope>
 		</dependency>
-			
+
 		<dependency>
 			<groupId>org.mock-server</groupId>
 			<artifactId>mockserver-client-java</artifactId>

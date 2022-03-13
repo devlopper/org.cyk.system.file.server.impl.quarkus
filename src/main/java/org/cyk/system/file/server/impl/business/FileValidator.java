@@ -21,14 +21,14 @@ public interface FileValidator {
 	
 	/* Import */
 	
-	static void validateImportInputs(List<String> directories,Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,String auditWho,ThrowablesMessages throwablesMessages) {
+	static void validateImportInputs(List<String> directories,Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,String auditWho,Boolean isDuplicateAllowed,ThrowablesMessages throwablesMessages) {
 		validatePathsNames(directories, pathsNames, throwablesMessages);
 		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);	
 	}
 	
-	static void validateImportInputs(List<String> directories,Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,String auditWho) {
+	static void validateImportInputs(List<String> directories,Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,Boolean isDuplicateAllowed,String auditWho) {
 		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
-		validateImportInputs(directories,pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize, auditWho,throwablesMessages);
+		validateImportInputs(directories,pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize, auditWho,isDuplicateAllowed,throwablesMessages);
 		throwablesMessages.throwIfNotEmpty();
 	}
 	

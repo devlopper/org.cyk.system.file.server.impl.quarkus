@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -12,11 +13,14 @@ import javax.ws.rs.core.Response.Status;
 
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.persistence.File;
+import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.system.file.server.api.service.FileDto;
 import org.cyk.system.file.server.api.service.FileService;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
 import org.cyk.utility.__kernel__.constant.ConstantString;
 import org.cyk.utility.business.Result;
+import org.cyk.utility.persistence.query.Filter;
+import org.cyk.utility.service.FilterFormat;
 import org.cyk.utility.service.server.AbstractSpecificServiceImpl;
 
 @ApplicationScoped
@@ -38,8 +42,8 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 	}
 	
 	@Override
-	public Response import_(List<String> pathsNames, String acceptedPathNameRegularExpression, Long minimalSize,Long maximalSize, String auditWho) {
-		return buildResponseOk(business.import_(pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize, auditWho));
+	public Response import_(List<String> pathsNames, String acceptedPathNameRegularExpression, Long minimalSize,Long maximalSize,Boolean isDuplicateAllowed, String auditWho) {
+		return buildResponseOk(business.import_(pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize,isDuplicateAllowed, auditWho));
 	}
 
 	@Override
@@ -61,13 +65,18 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 	}
 	
 	@Override
-	public Response readDuplicatedSha1() {
-		return buildResponseOk(business.readDuplicatedSha1());
+	public Response getDuplicatesIdentifiers() {
+		return get(JsonbBuilder.create().toJson(new Filter.Dto().addField(Parameters.DUPLICATED, Boolean.TRUE)), FilterFormat.JSON, List.of(FileImpl.FIELD_IDENTIFIER), Boolean.FALSE, Boolean.FALSE, null, null);
 	}
 	
 	@Override
-	public Response countDuplicatedSha1() {
-		return buildResponseOk(business.countDuplicatedSha1());
+	public Response countDuplicates() {
+		return count(JsonbBuilder.create().toJson(new Filter.Dto().addField(Parameters.DUPLICATED, Boolean.TRUE)), FilterFormat.JSON);
+	}
+	
+	@Override
+	public Response deleteDuplicates(String auditWho) {
+		return buildResponseOk(business.deleteDuplicates(auditWho));
 	}
 	
 	/**/

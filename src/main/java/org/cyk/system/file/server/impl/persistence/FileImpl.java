@@ -33,6 +33,7 @@ import lombok.experimental.Accessors;
 })
 @NamedQueries(value = {
 		@NamedQuery(name = FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" ASC")
+		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1,query = "SELECT t."+FileImpl.FIELD_SHA1+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NOT NULL ORDER BY t."+FileImpl.FIELD_SHA1+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_WHERE_SHA1_IS_NULL,query = "SELECT t FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NULL ORDER BY t."+FileImpl.FIELD_IDENTIFIER+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE,query = "SELECT t.sha1 FROM FileImpl t WHERE t.sha1 IS NOT NULL GROUP BY t.sha1 HAVING COUNT(t.sha1) > 1")
 		,@NamedQuery(name = FileImpl.QUERY_UPDATE_AUDITS_BY_IDENTIFIERS,query = "UPDATE FileImpl SET __auditIdentifier__ = :auditIdentifier,__auditFunctionality__ = :auditFunctionality,__auditWho__ = :auditWho,__auditWhat__ = :auditWhat,__auditWhen__ = :auditWhen WHERE identifier IN :identifiers")
@@ -116,6 +117,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String COLUMN___AUDIT_WHEN__ = "AUDIT_DATE";
 	
 	public static final String QUERY_READ_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readUniformResourceLocator";
+	public static final String QUERY_READ_SHA1 = "FileImpl.readSha1";
 	public static final String QUERY_READ_WHERE_SHA1_IS_NULL = "FileImpl.readWhereSha1IsNull";
 	public static final String QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE = "FileImpl.readSha1HavingCountSha1GreaterThanOne";
 	public static final String QUERY_UPDATE_AUDITS_BY_IDENTIFIERS = "FileImpl.updateAuditsByIdentifiers";
