@@ -120,6 +120,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				String sha1 = null;
 				if(Boolean.FALSE.equals(isDuplicateAllowedFinal)) {
 					sha1= FileHelper.computeSha1(getBytes(url, result));
+					System.gc();
 					if(StringHelper.isBlank(sha1)) {
 						result.addMessages(String.format("Unable to compte sha1 of %s", url));
 						return;
