@@ -174,12 +174,12 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(20)
 	public void business_countInDirectories_specific() {
-		assertThat(business.countInDirectories(List.of("src/test/resources/files/d1"), null, null, null).getValue()).isEqualTo(1l);
+		assertThat(business.countInDirectories(List.of("src/test/resources/files/d1"), null, null, null).getValue()).isEqualTo(5l);
 	}
 	
 	@Test @Order(20)
 	public void business_countInDirectories_all() {
-		assertThat(business.countInDirectories(null, null, null, null).getValue()).isEqualTo(7l);
+		assertThat(business.countInDirectories(null, null, null, null).getValue()).isEqualTo(11l);
 	}
 	
 	/* Import */
@@ -194,6 +194,7 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(20)
 	public void business_import_specific() {
+		System.out.println("FileTest.business_import_specific()+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 		business.import_(List.of("src/test/resources/files/d1"), null, null, null,null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
