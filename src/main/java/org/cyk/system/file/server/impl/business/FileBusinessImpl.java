@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -38,7 +36,6 @@ import org.cyk.utility.business.server.AbstractSpecificBusinessImpl;
 import org.cyk.utility.file.FileHelper;
 import org.cyk.utility.file.PathsProcessor;
 import org.cyk.utility.file.PathsScanner;
-import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -71,7 +68,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@ConfigProperty(name = "cyk.file.duplicate.allowed",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
 	Boolean isDuplicateAllowed;
 	
-	@ConfigProperty(name = "cyk.import.batch.size",defaultValue = "100")
+	@ConfigProperty(name = "cyk.import.batch.size",defaultValue = "25")
 	Integer importBatchSize;
 	@ConfigProperty(name = "cyk.import.executor.thread.count",defaultValue = "4")
 	Integer importExecutorThreadCount;
@@ -113,8 +110,6 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		List<Path> paths = (List<Path>) PathsScanner.getInstance().scan(new PathsScanner.Arguments().addPathsFromNames(pathsNames).setAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression)
 				.setMinimalSize(minimalSize).setMaximalSize(maximalSize));
 		
-		LogHelper.log(String.format("Importation is running. Directories : %s | Paths count : %s", pathsNames,CollectionHelper.getSize(paths)), Result.getLogLevel(), getClass());
-		
 		Collection<String> existingsSha1 = new HashSet<>();
 		if(Boolean.FALSE.equals(isDuplicateAllowed)) {
 			CollectionHelper.add(existingsSha1,Boolean.TRUE,persistence.readSha1s());
@@ -123,66 +118,40 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		Collection<String> existingsURLs = new HashSet<>();
 		CollectionHelper.add(existingsURLs, Boolean.TRUE, persistence.readUniformResourceLocators());
 		
-		Collection<FileImpl> files = new ArrayList<>();
 		String auditIdentifier = generateAuditIdentifier();
 		LocalDateTime auditWhen = LocalDateTime.now();
 		
-		List<List<Path>> batches = CollectionHelper.getBatches(paths, importBatchSize);
-		
-		LogHelper.log(String.format("\tNumber of batches : %s", CollectionHelper.getSize(batches)), Result.getLogLevel(), getClass());
-		
-		ExecutorService executorService = Executors.newFixedThreadPool(importExecutorThreadCount);
+		Collection<String> directories = pathsNames;
 		Boolean isDuplicateAllowedFinal = isDuplicateAllowed;
-		batches.forEach(batch -> {
-			executorService.execute(() -> {
-				EntityManager __entityManager__ = EntityManagerGetter.getInstance().get();
-				import_(batch, existingsURLs, existingsSha1, isDuplicateAllowedFinal, result, auditIdentifier, auditWho, auditWhen, __entityManager__);
-			});
-		});
-		shutdownExecutorService(executorService, importExecutorTimeoutDuration, importExecutorTimeoutUnit);
 		
-		//for(List<Path> batch : batches)
-		//	import_(batch, existingsURLs, existingsSha1, isDuplicateAllowed, result, auditIdentifier, auditWho, auditWhen, entityManager);
-		
-		/*
-		PathsProcessor.getInstance().process(paths,new CollectionProcessor.Arguments.Processing.AbstractImpl<Path>() {
+		Collection<File> files = new ArrayList<>();
+		new BatchProcessor.AbstractImpl<Path>() {
 			@Override
-			protected void __process__(Path path) {
-				String url = path.toFile().toURI().toString();
-				if(existingsURLs.contains(url))
-					return;
-				String sha1 = null;
-				if(Boolean.FALSE.equals(isDuplicateAllowedFinal)) {
-					sha1= FileHelper.computeSha1(getBytes(url, result));
-					System.gc();
-					if(StringHelper.isBlank(sha1)) {
-						result.addMessages(String.format("Unable to compte sha1 of %s", url));
-						return;
-					}
-					if(existingsSha1.contains(sha1))
-						return;
-				}
-				//Instantiate
-				FileImpl file = new FileImpl();
-				file.setNameAndExtension(path.toFile().getName());
-				file.setSize(path.toFile().length());
-				file.setUniformResourceLocator(path.toFile().toURI().toString());
-				file.setSha1(sha1);
-				Initializer.getInstance().initialize(FileImpl.class, file,IMPORT_AUDIT_IDENTIFIER);
-				if(StringHelper.isBlank(file.getMimeType())) {
-					result.addMessages(String.format("%s has no mime type", url));
-					return;
-				}
-				existingsURLs.add(file.getUniformResourceLocator());
-				if(Boolean.FALSE.equals(isDuplicateAllowedFinal) && StringHelper.isNotBlank(file.getSha1()))
-					existingsSha1.add(file.getSha1());
-				audit(file, auditIdentifier, IMPORT_AUDIT_IDENTIFIER, auditWho, auditWhen);
-				files.add(file);
+			protected String getName() {
+				return String.format("Importation from directories : %s", directories);
 			}
-		});
-		
-		EntityCreator.getInstance().create(new QueryExecutorArguments().setObjects(CollectionHelper.cast(Object.class, files)));
-		*/
+			@Override
+			protected void __process__(List<Path> paths, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
+				import_(paths, existingsURLs, existingsSha1, isDuplicateAllowedFinal,files, result, auditIdentifier, auditWho, auditWhen, entityManager);
+			}
+			@Override
+			protected Integer getSize() {
+				return importBatchSize;
+			}
+			@Override
+			protected Integer getExecutorThreadCount() {
+				return importExecutorThreadCount;
+			}
+			@Override
+			protected Long getExecutorTimeoutDuration() {
+				return importExecutorTimeoutDuration;
+			}
+			@Override
+			protected TimeUnit getExecutorTimeoutUnit() {
+				return importExecutorTimeoutUnit;
+			}
+		}.process(paths);
+
 		// Return of message
 		result.close().setName(String.format("Importation of %s file(s)",files.size())).log(getClass());
 		result.addMessages(String.format("Number of files imported : %s",files.size()));
@@ -190,7 +159,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	}
 	
 	@Transactional
-	void import_(Collection<Path> paths,Collection<String> existingsURLs,Collection<String> existingsSha1,Boolean isDuplicateAllowed,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+	void import_(Collection<Path> paths,Collection<String> existingsURLs,Collection<String> existingsSha1,Boolean isDuplicateAllowed,Collection<File> files,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
 		PathsProcessor.getInstance().process(paths,new CollectionProcessor.Arguments.Processing.AbstractImpl<Path>() {
 			@Override
 			protected void __process__(Path path) {
@@ -220,11 +189,14 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 					result.addMessages(String.format("%s has no mime type", url));
 					return;
 				}
-				existingsURLs.add(file.getUniformResourceLocator());
-				if(Boolean.FALSE.equals(isDuplicateAllowed) && StringHelper.isNotBlank(file.getSha1()))
-					existingsSha1.add(file.getSha1());
 				audit(file, auditIdentifier, IMPORT_AUDIT_IDENTIFIER, auditWho, auditWhen);
-				entityManager.persist(file);
+				synchronized(result) {
+					existingsURLs.add(file.getUniformResourceLocator());
+					if(Boolean.FALSE.equals(isDuplicateAllowed) && StringHelper.isNotBlank(file.getSha1()))
+						existingsSha1.add(file.getSha1());
+					files.add(file);
+				}
+				entityManager.persist(file);	
 			}
 		});
 	}
