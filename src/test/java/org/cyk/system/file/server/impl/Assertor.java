@@ -1,8 +1,9 @@
-package ci.gouv.dgbf.system.collectif.server.impl;
+package org.cyk.system.file.server.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,6 +18,17 @@ import org.cyk.utility.persistence.query.QueryExecutorArguments;
 public class Assertor {
 
 	@Inject FilePersistence filePersistence;
+	
+	public void assertFilterAsString(String search,String...expectedUniformResourceLocators) {
+		if(search == null)
+			return;
+		Collection<FileImpl> files = CollectionHelper.cast(FileImpl.class, filePersistence.readMany(new QueryExecutorArguments().addProjectionsFromStrings(FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR)
+				.addFilterFieldsValues(filePersistence.getParameterNameFilterAsString(),search).setNumberOfTuples(100)));
+		if(CollectionHelper.isEmpty(files))
+			assertThat(expectedUniformResourceLocators).isEmpty();
+		else
+			assertThat(files.stream().map(file -> file.getUniformResourceLocator()).collect(Collectors.toList())).containsExactlyInAnyOrder(expectedUniformResourceLocators);
+	}
 	
 	public void assertUniformResourceLocators(String...expectedUniformResourceLocators) {
 		Collection<String> uniformResourceLocators = filePersistence.readUniformResourceLocators();

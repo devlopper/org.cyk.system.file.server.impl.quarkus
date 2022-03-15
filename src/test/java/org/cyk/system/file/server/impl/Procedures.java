@@ -1,4 +1,4 @@
-package ci.gouv.dgbf.system.collectif.server.impl;
+package org.cyk.system.file.server.impl;
 
 public class Procedures {
 	

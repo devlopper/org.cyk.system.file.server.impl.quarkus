@@ -1,11 +1,19 @@
 package org.cyk.system.file.server.impl.persistence;
 
+import static org.cyk.utility.persistence.query.Language.parenthesis;
+import static org.cyk.utility.persistence.query.Language.Where.or;
+
 import java.util.Collection;
 
+import org.cyk.system.file.server.api.persistence.FilePersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
+import org.cyk.utility.__kernel__.DependencyInjection;
 import org.cyk.utility.__kernel__.collection.CollectionHelper;
+import org.cyk.utility.__kernel__.value.ValueHelper;
 import org.cyk.utility.persistence.query.Filter;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
+import org.cyk.utility.persistence.server.query.string.LikeStringBuilder;
+import org.cyk.utility.persistence.server.query.string.LikeStringValueBuilder;
 import org.cyk.utility.persistence.server.query.string.QueryStringBuilder.Arguments;
 import org.cyk.utility.persistence.server.query.string.WhereStringBuilder;
 
@@ -35,6 +43,18 @@ public interface FileQueryStringBuilder {
 				else
 					predicate.add(String.format("sha1 NOT IN (%s)", sha1CountIsGreaterThanOne()));
 			}
+			
+			if(queryExecutorArguments.getFilterField(DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString()) != null) {
+				predicate.add(search());
+				String search = ValueHelper.defaultToIfBlank((String) queryExecutorArguments.getFilterFieldValue(DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString()),"");
+				filter.addField(DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString(), LikeStringValueBuilder.getInstance().build(search, null, null));
+			}
+		}
+		
+		static String search() {
+			return parenthesis(or(
+					LikeStringBuilder.getInstance().build("t", FileImpl.FIELD_NAME,DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString())
+			));
 		}
 		
 		/**
@@ -60,6 +80,16 @@ public interface FileQueryStringBuilder {
 	public static interface Group {
 		static void populate() {
 			
+		}
+	}
+	
+	public static interface Order {
+		static void populate(QueryExecutorArguments queryExecutorArguments, Arguments arguments) {
+			if(arguments.getOrder() == null || CollectionHelper.isEmpty(arguments.getOrder(Boolean.TRUE).getStrings())) {
+				if(queryExecutorArguments.getFilterField(DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString()) != null) {
+					arguments.getOrder(Boolean.TRUE).asc("t",FileImpl.FIELD_NAME);
+				}
+			}
 		}
 	}
 	

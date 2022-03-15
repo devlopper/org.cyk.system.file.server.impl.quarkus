@@ -1,4 +1,4 @@
-package ci.gouv.dgbf.system.collectif.server.impl;
+package org.cyk.system.file.server.impl;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -194,7 +194,6 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(20)
 	public void business_import_specific() {
-		System.out.println("FileTest.business_import_specific()+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 		business.import_(List.of("src/test/resources/files/d1"), null, null, null,null,"christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
 	}
@@ -278,28 +277,7 @@ public class FileTest extends AbstractTest {
 		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE))).isEqualTo(0l);
 	}
 	
-	@SuppressWarnings("resource")
 	@Test @Order(31)
-	public void business_computeSha1() {
-		new MockServerClient("localhost", WEB_SERVER_PORT)
-	    .when(HttpRequest.request().withMethod("GET").withPath("/f01.txt"))
-	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("Good job"));
-		
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f02.txt", null);
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f01.txt", null);
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f03.txt", null);
-		business.computeSha1("christian");
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f02.txt", null);
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f01.txt", "e86b3d9ac0c078a920c6ef791ee224c144ddfbbd");
-		assertor.assertSha1ByUniformResourceLocator("http://localhost:10000/f03.txt", null);
-	}
-	
-	@Test @Order(32)
-	public void business_countDuplicatesAgain() {
-		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE))).isEqualTo(0l);
-	}
-	
-	@Test @Order(33)
 	public void business_deleteDuplicates() {
 		business.import_(List.of("src/test/resources/files_outside"), null, null, null, Boolean.TRUE, "christian");
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
@@ -313,5 +291,36 @@ public class FileTest extends AbstractTest {
 		assertThat(result.getCountsMap().get(FileImpl.class).get(Action.DELETE)).isEqualTo(1);
 		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE))).isEqualTo(0l);
 		assertThat(persistence.count()).isEqualTo(count-1);
+
+		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
+				,buildUrl("files02/d1/d1_f1.txt"),buildUrl("files02/f1.txt"),buildUrl("files_outside/f1_outside.txt"),buildUrl("files_service/d1/d1_f1.txt"),buildUrl("files_service/f1.txt")
+				,"http://localhost:10000/f01.txt","http://localhost:10000/f02.txt","http://localhost:10000/f03.txt");
+	}
+	
+	/* Search */
+	
+	@Test @Order(32)
+	public void persistence_filterAsString_noResult() {
+		assertor.assertFilterAsString("XXX_UNKNOWN_XXX");
+	}
+	
+	@Test @Order(32)
+	public void persistence_filterAsString_outside() {
+		assertor.assertFilterAsString("outside",buildUrl("files_outside/f1_outside.txt"));
+	}
+	
+	@Test @Order(32)
+	public void persistence_filterAsString_name() {
+		assertor.assertFilterAsString("name","http://localhost:10000/f02.txt","http://localhost:10000/f01.txt","http://localhost:10000/f03.txt");
+	}
+	
+	@Test @Order(32)
+	public void persistence_filterAsString_name02() {
+		assertor.assertFilterAsString("name02","http://localhost:10000/f01.txt");
+	}
+	
+	@Test @Order(32)
+	public void persistence_filterAsString_d1_f1() {
+		assertor.assertFilterAsString("d1_f1",buildUrl("files_service/d1/d1_f1.txt"),buildUrl("files/d1/d1_f1.txt"),buildUrl("files02/d1/d1_f1.txt"));
 	}
 }

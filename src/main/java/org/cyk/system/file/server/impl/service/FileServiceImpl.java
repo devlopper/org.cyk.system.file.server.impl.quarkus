@@ -60,11 +60,6 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 	}
 	
 	@Override
-	public Response computeSha1(String auditWho) {
-		return buildResponseOk(business.computeSha1(auditWho));
-	}
-	
-	@Override
 	public Response getDuplicatesIdentifiers() {
 		return get(JsonbBuilder.create().toJson(new Filter.Dto().addField(Parameters.DUPLICATED, Boolean.TRUE)), FilterFormat.JSON, List.of(FileImpl.FIELD_IDENTIFIER), Boolean.FALSE, Boolean.FALSE, null, null);
 	}

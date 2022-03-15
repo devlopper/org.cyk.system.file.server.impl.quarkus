@@ -201,31 +201,9 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 					existingsSha1.add(sha1);
 				}
 			});
-			
-			
-			/*
-			paths.forEach(path -> {
-				String sha1 = FileHelper.computeSha1(getBytes(path.toFile().toURI().toString(), result));
-				if(StringHelper.isBlank(sha1)) {
-					result.addMessages(String.format("Unable to compte sha1 of %s", path));
-					return;
-				}
-				
-				if(existingsSha1.contains(sha1) || pathsSha1s.containsValue(sha1))
-					return;
-
-				pathsSha1s.put(path, sha1);
-				synchronized(result) {	
-					existingsSha1.add(sha1);
-				}
-			});
-			*/
-			
 		}else
 			paths.forEach(path -> map.put(path, null));
-		
-		//map.putAll(pathsSha1s);
-		
+
 		//Instantiate
 		map.forEach((path,sha1) -> {
 			FileImpl file = new FileImpl();
@@ -245,46 +223,6 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			}
 			entityManager.persist(file);	
 		});
-		/*
-		PathsProcessor.getInstance().process(paths,new CollectionProcessor.Arguments.Processing.AbstractImpl<Path>() {
-			@Override
-			protected void __process__(Path path) {
-				String url = path.toFile().toURI().toString();
-				if(existingsURLs.contains(url))
-					return;
-				String sha1 = null;
-				if(Boolean.FALSE.equals(isDuplicateAllowed)) {
-					sha1= FileHelper.computeSha1(getBytes(url, result));
-					System.gc();
-					if(StringHelper.isBlank(sha1)) {
-						result.addMessages(String.format("Unable to compte sha1 of %s", url));
-						return;
-					}
-					if(existingsSha1.contains(sha1))
-						return;
-				}
-				//Instantiate
-				FileImpl file = new FileImpl();
-				file.setIdentifier(IdentifiableSystem.generateRandomly());
-				file.setNameAndExtension(path.toFile().getName());
-				file.setSize(path.toFile().length());
-				file.setUniformResourceLocator(path.toFile().toURI().toString());
-				file.setSha1(sha1);
-				Initializer.getInstance().initialize(FileImpl.class, file,IMPORT_AUDIT_IDENTIFIER);
-				if(StringHelper.isBlank(file.getMimeType())) {
-					result.addMessages(String.format("%s has no mime type", url));
-					return;
-				}
-				audit(file, auditIdentifier, IMPORT_AUDIT_IDENTIFIER, auditWho, auditWhen);
-				synchronized(result) {
-					existingsURLs.add(file.getUniformResourceLocator());
-					if(Boolean.FALSE.equals(isDuplicateAllowed) && StringHelper.isNotBlank(file.getSha1()))
-						existingsSha1.add(file.getSha1());
-					files.add(file);
-				}
-				entityManager.persist(file);	
-			}
-		});*/
 	}
 	
 	@Override
@@ -319,31 +257,6 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		}
 	}
 	
-	
-	@Override @Transactional
-	public Result computeSha1(String auditWho) {
-		Result result = new Result().open();
-		FileValidator.validateComputeSha1Inputs(auditWho);
-		Collection<File> files = persistence.readWhereSha1IsNull();
-		
-		String auditIdentifier = generateAuditIdentifier();
-		LocalDateTime auditWhen = LocalDateTime.now();
-		computeSha1(files, auditIdentifier, COMPUTE_SHA1_AUDIT_IDENTIFIER, auditWho, auditWhen, entityManager, result);
-		/*for(File file : files) {
-			byte[] bytes = getBytes(((FileImpl)file).getUniformResourceLocator(),result);
-			if(bytes == null)
-				continue;
-			((FileImpl)file).setSha1(FileHelper.computeSha1(bytes));
-			audit((AuditableWhoDoneWhatWhen) file, auditIdentifier, COMPUTE_SHA1_AUDIT_IDENTIFIER, auditWho, auditWhen);
-		}
-		
-		updateBatch(files, entityManager, null, null);
-		*/
-		// Return of message
-		result.close().setName(String.format("Computation of sha1 of %s file(s)",files.size())).log(getClass());
-		return result;
-	}
-	
 	void computeSha1(Collection<File> files,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen,EntityManager entityManager,Result result) {
 		if(CollectionHelper.isEmpty(files))
 			return;
@@ -352,7 +265,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			if(bytes == null)
 				continue;
 			((FileImpl)file).setSha1(FileHelper.computeSha1(bytes));
-			audit((AuditableWhoDoneWhatWhen) file, auditIdentifier, COMPUTE_SHA1_AUDIT_IDENTIFIER, auditWho, auditWhen);
+			audit((AuditableWhoDoneWhatWhen) file, auditIdentifier, auditFunctionality, auditWho, auditWhen);
 		}
 		updateBatch(files, entityManager, null, null);
 	}

@@ -1,4 +1,4 @@
-package ci.gouv.dgbf.system.collectif.server.impl;
+package org.cyk.system.file.server.impl;
 
 import java.net.MalformedURLException;
 import java.nio.file.Paths;
