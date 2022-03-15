@@ -66,16 +66,6 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 	})
 	Response download(@PathParam(PARAMETER_IDENTIFIER) String identifier,@QueryParam(PARAMETER_IS_INLINE) Boolean isInline);
 	
-	@POST
-	@Path("sha1-computation")
-	@Produces({MediaType.TEXT_PLAIN})
-	@Operation(description = "sha1 computation")
-	@APIResponses(value = {
-			@APIResponse(description = "sha1 computed",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
-			,@APIResponse(description = "Error while computing sha1",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-	})
-	Response computeSha1(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
-	
 	@GET
 	@Path("duplicates-identifiers")
 	@Produces({MediaType.APPLICATION_JSON})

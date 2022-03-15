@@ -15,9 +15,6 @@ public interface FileBusiness extends org.cyk.utility.business.SpecificBusiness<
 	String DOWNLOAD_AUDIT_IDENTIFIER = "FILE_DOWNLOAD";
 	Result download(String identifier);
 	
-	String COMPUTE_SHA1_AUDIT_IDENTIFIER = "FILE_SHA1_COMPUTATION";
-	Result computeSha1(String auditWho);
-
 	String DELETE_DUPLICATES_AUDIT_IDENTIFIER = "FILE_DUPLICATES_DELETION";
 	Result deleteDuplicates(String auditWho);
 	
