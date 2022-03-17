@@ -6,5 +6,5 @@ public interface Parameters {
 	String SHA1_IS_DUPLICATED = "sha1IsDuplicated";
 	String SHA1 = "sha1";
 	String SHA1S = "sha1s";
-	String DUPLICATED = "duplicated";
+	String IS_A_DUPLICATE = "is_a_duplicate";
 }

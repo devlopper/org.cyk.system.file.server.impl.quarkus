@@ -66,26 +66,6 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 	})
 	Response download(@PathParam(PARAMETER_IDENTIFIER) String identifier,@QueryParam(PARAMETER_IS_INLINE) Boolean isInline);
 	
-	@GET
-	@Path("duplicates-identifiers")
-	@Produces({MediaType.APPLICATION_JSON})
-	@Operation(description = "Get duplicates identifiers")
-	@APIResponses(value = {
-			@APIResponse(description = "Duplicates identifiers got",responseCode = "200", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-			,@APIResponse(description = "Error while getting duplicates identifiers",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-	})
-	Response getDuplicatesIdentifiers();
-	
-	@GET
-	@Path("duplicates-number")
-	@Produces({MediaType.TEXT_PLAIN})
-	@Operation(description = "Get number of duplicates")
-	@APIResponses(value = {
-			@APIResponse(description = "Number of duplicates got",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
-			,@APIResponse(description = "Error while getting number of duplicates",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
-	})
-	Response countDuplicates();
-	
 	@DELETE
 	@Path("duplicates")
 	@Produces({MediaType.TEXT_PLAIN})

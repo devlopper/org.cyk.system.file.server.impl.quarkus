@@ -18,15 +18,17 @@ public interface FileBusiness extends org.cyk.utility.business.SpecificBusiness<
 	String DELETE_DUPLICATES_AUDIT_IDENTIFIER = "FILE_DUPLICATES_DELETION";
 	Result deleteDuplicates(String auditWho);
 	
-	/*
 	String EXTRACT_BYTES_AUDIT_IDENTIFIER = "FILE_BYTES_EXTRACTION";
-	Result extractBytes(Collection<String> identifiers);
-	Result extractBytes(String...identifiers);
-	Result extractBytesAll();
+	Result extractBytes(Collection<String> identifiers,String auditWho);
+	Result extractBytes(String auditWho,String...identifiers);
+	
+	String EXTRACT_BYTES_OF_ALL_AUDIT_IDENTIFIER = "FILE_BYTES_OF_ALL_EXTRACTION";
+	Result extractBytesOfAll(String auditWho);
 	
 	String EXTRACT_TEXT_AUDIT_IDENTIFIER = "FILE_TEXT_EXTRACTION";
-	Result extractText(Collection<String> identifiers);
-	Result extractText();
-	*/
+	Result extractText(Collection<String> identifiers,String auditWho);
+	Result extractText(String auditWho,String...identifiers);
 	
+	String EXTRACT_TEXT_OF_ALL_AUDIT_IDENTIFIER = "FILE_TEXT_OF_ALL_EXTRACTION";
+	Result extractTextOfAll(String auditWho);
 }

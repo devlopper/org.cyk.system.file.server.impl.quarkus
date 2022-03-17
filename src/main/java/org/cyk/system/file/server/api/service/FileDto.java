@@ -12,4 +12,5 @@ public interface FileDto extends org.cyk.utility.service.entity.IdentifiableSyst
 	String JSON_SHA1 = "sha1";
 	String JSON_NAME_AND_EXTENSION = "name_and_extension";
 	String JSON_TEXT = "text";
+	String JSON_IS_A_DUPLICATE = "is_a_duplicate";
 }
