@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -18,17 +19,25 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
+import org.cyk.system.file.server.impl.persistence.FileBytesImpl;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
+import org.cyk.system.file.server.impl.persistence.FileImplUniformResourceLocatorExtensionMimeTypeReader;
+import org.cyk.system.file.server.impl.persistence.FileTextImpl;
+import org.cyk.utility.__kernel__.DependencyInjection;
+import org.cyk.utility.__kernel__.array.ArrayHelper;
 import org.cyk.utility.__kernel__.collection.CollectionHelper;
 import org.cyk.utility.__kernel__.computation.ComparisonOperator;
+import org.cyk.utility.__kernel__.computation.SortOrder;
 import org.cyk.utility.__kernel__.enumeration.Action;
 import org.cyk.utility.__kernel__.identifier.resource.UniformResourceLocatorHelper;
 import org.cyk.utility.__kernel__.log.LogHelper;
 import org.cyk.utility.__kernel__.number.NumberHelper;
+import org.cyk.utility.__kernel__.object.AbstractObject;
 import org.cyk.utility.__kernel__.object.marker.AuditableWhoDoneWhatWhen;
 import org.cyk.utility.__kernel__.object.marker.IdentifiableSystem;
 import org.cyk.utility.__kernel__.string.StringHelper;
@@ -37,13 +46,20 @@ import org.cyk.utility.business.Result;
 import org.cyk.utility.business.server.AbstractSpecificBusinessImpl;
 import org.cyk.utility.file.FileHelper;
 import org.cyk.utility.file.PathsScanner;
+import org.cyk.utility.persistence.EntityManagerGetter;
+import org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.quarkus.scheduler.Scheduled;
+import io.quarkus.vertx.ConsumeEvent;
+import io.vertx.core.eventbus.EventBus;
 
 @ApplicationScoped
 public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> implements FileBusiness,Serializable{
 
 	@Inject EntityManager entityManager;
+	@Inject EventBus eventBus;
 	@Inject FilePersistence persistence;
 
 	public static final String DEFAULT_DIRECTORIES = "data/files";
@@ -74,13 +90,16 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@ConfigProperty(name = "cyk.file.is.sha1.computation.parallel",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
 	Boolean isSha1ComputationParallel;
 	
-	@ConfigProperty(name = "cyk.import.batch.size",defaultValue = "25")
+	@ConfigProperty(name = "cyk.file.is.text.extraction.runnable.after.creation",defaultValue = "true")
+	Boolean isTextExtractionRunnableAfterCreation;
+	
+	@ConfigProperty(name = "cyk.file.importation.batch.size",defaultValue = "25")
 	Integer importBatchSize;
-	@ConfigProperty(name = "cyk.import.executor.thread.count",defaultValue = "4")
+	@ConfigProperty(name = "cyk.file.importation.executor.thread.count",defaultValue = "4")
 	Integer importExecutorThreadCount;
-	@ConfigProperty(name = "cyk.import.executor.timeout.duration",defaultValue = "5")
+	@ConfigProperty(name = "cyk.file.importation.executor.timeout.duration",defaultValue = "5")
 	Long importExecutorTimeoutDuration;
-	@ConfigProperty(name = "cyk.import.executor.timeout.unit",defaultValue = "MINUTES")
+	@ConfigProperty(name = "cyk.file.importation.executor.timeout.unit",defaultValue = "MINUTES")
 	TimeUnit importExecutorTimeoutUnit;
 	
 	List<String> emptyPathsNames;
@@ -99,7 +118,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				.setAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression).setMinimalSize(minimalSize).setMaximalSize(maximalSize))));
 		
 		// Return of message
-		return result;
+		return result.close();
 	}
 	
 	@Override
@@ -173,6 +192,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		// Return of message
 		result.close().setName(String.format("Importation of %s file(s)",files.size())).log(getClass());
 		result.addMessages(String.format("Number of files imported : %s",files.size()));
+		
+		if(Boolean.TRUE.equals(isTextExtractionRunnableAfterCreation))
+			eventBus.request(EVENT_CHANNEL_EXTRACT_TEXT_OF_ALL, null);
+		
 		return result;
 	}
 	
@@ -243,12 +266,11 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			}
 		}
 		// Return of message
-		result.close().setName(String.format("Downloading of %s",identifier)).log(getClass());
+		result.close().setName(String.format("Downloading of %s",identifier)).setLogLevel(Level.FINE).log(getClass());
 		return result;
 	}
 	
-	
-	byte[] getBytes(String uniformResourceLocator,Result result) {
+	static byte[] getBytes(String uniformResourceLocator,Result result) {
 		try {
 			return UniformResourceLocatorHelper.getBytes(uniformResourceLocator);
 		} catch (Exception exception) {
@@ -280,7 +302,9 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		
 		computeSha1(persistence.readWhereSha1IsNull(), auditIdentifier, auditWho, auditWho, auditWhen, entityManager, result);
 		
-		Collection<File> files = persistence.readMany(new QueryExecutorArguments().setEntityManager(entityManager).addProjectionsFromStrings(FileImpl.FIELD_IDENTIFIER,FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR).addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE));
+		Collection<File> files = persistence.readMany(new QueryExecutorArguments().setEntityManager(entityManager).addProjectionsFromStrings(FileImpl.FIELD_IDENTIFIER,FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR)
+				.addFilterFieldsValues(Parameters.IS_A_DUPLICATE,Boolean.TRUE).setSortOrders(Map.of(FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR,SortOrder.ASCENDING)));
+
 		Integer count = 0;
 		if(CollectionHelper.isNotEmpty(files)) {
 			Collection<String> identifiers = files.stream().map(file -> file.getIdentifier()).collect(Collectors.toList());
@@ -293,6 +317,55 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		result.count(FileImpl.class, Action.DELETE, count);
 		result.addMessages(String.format("%s duplicated file(s) deleted",count));
 		return result;
+	}
+	
+	/* Extract Bytes */
+	
+	@Override
+	public Result extractBytes(Collection<String> identifiers,String auditWho) {
+		return new BytesExtractorImpl().extract(identifiers, auditWho);
+	}
+	
+	@Override
+	public Result extractBytes(String auditWho, String... identifiers) {
+		return extractBytes(ArrayHelper.isEmpty(identifiers) ? null : CollectionHelper.listOf(identifiers),auditWho);
+	}
+	
+	@Override
+	public Result extractBytesOfAll(String auditWho) {
+		return new BytesExtractorImpl().extractOfAll(auditWho);
+	}
+	
+	/* Extract Text */
+	
+	@Override
+	public Result extractText(Collection<String> identifiers, String auditWho) {
+		return new TextExtractorImpl().extract(identifiers, auditWho);
+	}
+	
+	@Override
+	public Result extractText(String auditWho, String... identifiers) {
+		return extractText(ArrayHelper.isEmpty(identifiers) ? null : CollectionHelper.listOf(identifiers),auditWho);
+	}
+	
+	@Override
+	public Result extractTextOfAll(String auditWho) {
+		return new TextExtractorImpl().extractOfAll(auditWho);
+	}
+	
+	void extractTextOfAllBySystem() {
+		extractTextOfAll(EntityLifeCycleListenerImpl.SYSTEM_USER_NAME);
+	}
+	
+	public static final String EVENT_CHANNEL_EXTRACT_TEXT_OF_ALL = "EXTRACT_TEXT_OF_ALL";
+	@ConsumeEvent(EVENT_CHANNEL_EXTRACT_TEXT_OF_ALL)
+    public void listenExtractTextOfAll(String message) {
+		extractTextOfAllBySystem();
+	}
+	
+	@Scheduled(cron = "{cyk.file.text.extraction.cron}")
+	void extractTextOfAllAutomatically() {
+		extractTextOfAllBySystem();
 	}
 	
 	/**/
@@ -326,5 +399,206 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		if(isDuplicateAllowed == null)
 			return this.isDuplicateAllowed;
 		return isDuplicateAllowed;
+	}
+	
+	/**/
+	
+	public static interface BytesExtractor<T extends AuditableWhoDoneWhatWhen> {
+		
+		Result extract(Collection<String> identifiers,String auditWho);
+		Result extract(String auditWho,String...identifiers);
+		Result extractOfAll(String auditWho);
+		
+		/**/
+		
+		public static abstract class AbstractImpl<T extends AuditableWhoDoneWhatWhen> extends AbstractObject implements BytesExtractor<T>,Serializable {
+			
+			@Override
+			public Result extract(Collection<String> identifiers,String auditWho) {
+				Result result = new Result().open();
+				FileValidator.validateExtractBytesInputs(identifiers, auditWho);
+				Collection<String> unexistingIdentifiers = getEntityManager().createNamedQuery(getUnexistingByIdentifiersQueryIdentifier(), String.class).setParameter("identifiers", identifiers).getResultList();
+				Collection<Object[]> arrays = CollectionHelper.isEmpty(unexistingIdentifiers) ? null : getArrays(unexistingIdentifiers);
+				if(CollectionHelper.isNotEmpty(arrays)) {
+					String auditIdentifier = getAuditIdentifier();
+					LocalDateTime auditWhen = LocalDateTime.now();			
+					extract(arrays, result, auditIdentifier, getAuditFunctionality(),auditWho, auditWhen, getEntityManager());
+				}
+
+				// Return of message
+				result.close().setName(String.format("Extraction of %s file's %s by %s",CollectionHelper.getSize(arrays),getDataName(),auditWho)).log(getClass());
+				result.addMessages(String.format("%s file's %s extracted",getDataName(),CollectionHelper.getSize(arrays)));
+				return result;
+			}
+			
+			void extract(Collection<Object[]> arrays,Result result,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+				Collection<T> instances = new ArrayList<>();
+				arrays.stream().parallel().forEach(array -> {
+					byte[] bytes = getBytes(getUniformResourceLocator((Object[])array),result);
+					if(bytes == null)
+						return;
+					T instance = instantiate( (String)(array)[0],bytes,getExtension(array),getMimeType(array),result);
+					if(instance == null)
+						return;
+					audit(instance, auditIdentifier, auditFunctionality, auditWho, auditWhen);
+					synchronized(instances) {
+						instances.add(instance);
+					}
+				});
+				if(Boolean.TRUE.equals(isTransactionNotManaged()))
+					entityManager.getTransaction().begin();
+				instances.forEach(instance -> {
+					entityManager.persist(instance);
+				});
+				if(Boolean.TRUE.equals(isTransactionNotManaged()))
+					entityManager.getTransaction().commit();
+			}
+			
+			Integer extractOf(Collection<String> identifiers,Result result,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+				Collection<Object[]> arrays = getArrays(identifiers);
+				extract(arrays, result, auditIdentifier, auditFunctionality,auditWho, auditWhen, entityManager);
+				return arrays.size();
+			}
+			
+			@Override
+			public Result extract(String auditWho, String... identifiers) {
+				return extract(ArrayHelper.isEmpty(identifiers) ? null : CollectionHelper.listOf(identifiers),auditWho);
+			}
+			
+			@Override
+			public Result extractOfAll(String auditWho) {
+				Result result = new Result().open();
+				FileValidator.validateExtractBytesAllInputs(auditWho);
+				
+				String auditIdentifier = getAuditIdentifier();
+				LocalDateTime auditWhen = LocalDateTime.now();
+				
+				Collection<String> identifiers = getEntityManager().createNamedQuery(getUnexistingQueryIdentifier(), String.class).getResultList();;
+				
+				Integer count = CollectionHelper.isEmpty(identifiers) ? 0 : extractOf(identifiers, result, auditIdentifier, getAllAuditFunctionality(), auditWho, auditWhen, getEntityManager());
+				
+				// Return of message
+				result.close().setName(String.format("Extraction of all file's %s(%s) by %s",getDataName(),count,auditWho)).log(getClass());
+				result.addMessages(String.format("%s file's %s extracted",getDataName(),count));
+				return result;		
+			}
+			
+			abstract T instantiate(String identifier,byte[] bytes,String extension,String mimeType,Result result);
+			
+			String getAuditIdentifier() {
+				return generateAuditIdentifier(FileImpl.class);
+			}
+			
+			abstract String getDataName();
+			
+			abstract String getAuditFunctionality();
+			
+			abstract String getAllAuditFunctionality();
+			
+			EntityManager getEntityManager() {
+				return EntityManagerGetter.getInstance().get();
+			}
+			
+			Boolean isTransactionNotManaged() {
+				return Boolean.TRUE;
+			}
+			
+			FilePersistence getPersistence() {
+				return DependencyInjection.inject(FilePersistence.class);
+			}
+			
+			Collection<Object[]> getArrays(Collection<String> identifiers) {
+				return new FileImplUniformResourceLocatorExtensionMimeTypeReader().readByIdentifiers(identifiers, null);
+			}
+			
+			String getUniformResourceLocator(Object[] array) {
+				return (String) array[1];
+			}
+			
+			String getExtension(Object[] array) {
+				return (String) array[2];
+			}
+			
+			String getMimeType(Object[] array) {
+				return (String) array[3];
+			}
+			
+			abstract String getUnexistingByIdentifiersQueryIdentifier();
+			abstract String getUnexistingQueryIdentifier();
+		}
+	}
+
+	public class BytesExtractorImpl extends BytesExtractor.AbstractImpl<FileBytesImpl> implements Serializable {
+
+		@Override
+		String getDataName() {
+			return "bytes";
+		}
+		
+		@Override
+		String getAuditFunctionality() {
+			return EXTRACT_BYTES_AUDIT_IDENTIFIER;
+		}
+		
+		@Override
+		String getAllAuditFunctionality() {
+			return EXTRACT_BYTES_OF_ALL_AUDIT_IDENTIFIER;
+		}
+		
+		@Override
+		FileBytesImpl instantiate(String identifier, byte[] bytes,String extension,String mimeType,Result result) {
+			return new FileBytesImpl(identifier,bytes);
+		}
+		
+		@Override
+		String getUnexistingByIdentifiersQueryIdentifier() {
+			return FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_BY_IDENTIFIERS;
+		}
+		
+		@Override
+		String getUnexistingQueryIdentifier() {
+			return FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS;
+		}
+	}
+	
+	public class TextExtractorImpl extends BytesExtractor.AbstractImpl<FileTextImpl> implements Serializable {
+		
+		@Override
+		String getDataName() {
+			return "text";
+		}
+		
+		@Override
+		String getAuditFunctionality() {
+			return EXTRACT_TEXT_AUDIT_IDENTIFIER;
+		}
+		
+		@Override
+		String getAllAuditFunctionality() {
+			return EXTRACT_TEXT_OF_ALL_AUDIT_IDENTIFIER;
+		}
+		
+		@Override
+		FileTextImpl instantiate(String identifier, byte[] bytes,String extension,String mimeType,Result result) {
+			// Compute text from bytes depending on mime type
+			String text = null;
+			if(StringUtils.startsWithIgnoreCase(mimeType, "text/"))
+				text = new String(bytes);
+			if(text == null) {
+				result.addMessages(String.format("Cannot get text of <<%s>>", identifier));
+				return null;
+			}
+			return new FileTextImpl(identifier,text);
+		}
+		
+		@Override
+		String getUnexistingByIdentifiersQueryIdentifier() {
+			return FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS;
+		}
+		
+		@Override
+		String getUnexistingQueryIdentifier() {
+			return FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS;
+		}
 	}
 }

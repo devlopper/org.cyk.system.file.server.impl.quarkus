@@ -44,4 +44,18 @@ public class Assertor {
 		assertThat(file).as("File at <<"+uniformResourceLocator+">> found").isNotNull();
 		assertThat(file.getSha1()).as("Sha1 of file at <<"+uniformResourceLocator+">>").isEqualTo(expectedSha1);
 	}
+	
+	public void assertBytesByUniformResourceLocator(String uniformResourceLocator,byte[] expectedBytes) {
+		FileImpl file = (FileImpl) filePersistence.readOne(new QueryExecutorArguments().addProjectionsFromStrings(FileImpl.FIELD_BYTES)
+				.addFilterFieldsValues(Parameters.UNIFORM_RESOURCE_LOCATOR,uniformResourceLocator));
+		assertThat(file).as("File at <<"+uniformResourceLocator+">> found").isNotNull();
+		assertThat(file.getBytes()).as("bytes of file at <<"+uniformResourceLocator+">>").isEqualTo(expectedBytes);
+	}
+	
+	public void assertTextByUniformResourceLocator(String uniformResourceLocator,String expectedText) {
+		FileImpl file = (FileImpl) filePersistence.readOne(new QueryExecutorArguments().addProjectionsFromStrings(FileImpl.FIELD_TEXT)
+				.addFilterFieldsValues(Parameters.UNIFORM_RESOURCE_LOCATOR,uniformResourceLocator));
+		assertThat(file).as("File at <<"+uniformResourceLocator+">> found").isNotNull();
+		assertThat(file.getText()).as("text of file at <<"+uniformResourceLocator+">>").isEqualTo(expectedText);
+	}
 }

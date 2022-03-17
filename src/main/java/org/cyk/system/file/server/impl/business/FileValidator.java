@@ -79,4 +79,54 @@ public interface FileValidator {
 		validateDeleteDuplicatedInputs(auditWho,throwablesMessages);
 		throwablesMessages.throwIfNotEmpty();
 	}
+	
+	/* Extract bytes */
+	
+	static void validateExtractBytesInputs(Collection<String> identifiers,String auditWho,ThrowablesMessages throwablesMessages) {
+		throwablesMessages.addIfTrue("Identifiers are required", CollectionHelper.isEmpty(identifiers));
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateExtractBytesInputs(Collection<String> identifiers,String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateExtractBytesInputs(identifiers,auditWho,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
+	
+	/* Extract bytes of all */
+	
+	static void validateExtractBytesAllInputs(String auditWho,ThrowablesMessages throwablesMessages) {
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateExtractBytesAllInputs(String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateExtractBytesAllInputs(auditWho,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
+	
+	/* Extract bytes */
+	
+	static void validateExtractTextInputs(Collection<String> identifiers,String auditWho,ThrowablesMessages throwablesMessages) {
+		throwablesMessages.addIfTrue("Identifiers are required", CollectionHelper.isEmpty(identifiers));
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateExtractTextInputs(Collection<String> identifiers,String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateExtractTextInputs(identifiers,auditWho,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
+	
+	/* Extract bytes of all */
+	
+	static void validateExtractTextAllInputs(String auditWho,ThrowablesMessages throwablesMessages) {
+		Validator.getInstance().validateAuditWho(auditWho, throwablesMessages);
+	}
+	
+	static void validateExtractTextAllInputs(String auditWho) {
+		ThrowablesMessages throwablesMessages = new ThrowablesMessages();
+		validateExtractTextAllInputs(auditWho,throwablesMessages);
+		throwablesMessages.throwIfNotEmpty();
+	}
 }

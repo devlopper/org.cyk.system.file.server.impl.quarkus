@@ -6,12 +6,15 @@ import static org.hamcrest.Matchers.equalTo;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import org.cyk.system.file.server.api.business.FileBusiness;
+import org.cyk.system.file.server.api.persistence.FileBytesPersistence;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
+import org.cyk.system.file.server.api.persistence.FileTextPersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.system.file.server.api.service.FileDto;
 import org.cyk.system.file.server.api.service.FileService;
@@ -19,6 +22,8 @@ import org.cyk.system.file.server.impl.persistence.FileImpl;
 import org.cyk.utility.__kernel__.enumeration.Action;
 import org.cyk.utility.__kernel__.protocol.http.HttpHelper;
 import org.cyk.utility.business.Result;
+import org.cyk.utility.persistence.query.Field;
+import org.cyk.utility.persistence.query.Filter;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -45,6 +50,8 @@ public class FileTest extends AbstractTest {
 	
 	@Inject EntityManager entityManager;
 	@Inject FilePersistence persistence;
+	@Inject FileBytesPersistence fileBytesPersistence;
+	@Inject FileTextPersistence fileTextPersistence;
 	@Inject FileBusiness business;
 	@Inject FileService service;
 	
@@ -71,6 +78,20 @@ public class FileTest extends AbstractTest {
 	protected static void listenAfterAll() {
 		if(SERVER != null)
 			SERVER.stop();
+	}
+	
+	@Test @Order(10)
+	public void dto_to_string() {
+		assertThat(JsonbBuilder.create().toJson(new Filter.Dto().addField(FileDto.JSON_IS_A_DUPLICATE, Boolean.TRUE))).isEqualTo("{\"fields\":[{\"name\":\"is_a_duplicate\",\"value\":{\"container\":\"NONE\",\"value\":\"true\"}}]}");
+	}
+	
+	@Test @Order(10)
+	public void string_to_dto() {
+		Filter.Dto dto = JsonbBuilder.create().fromJson("{\"fields\":[{\"name\":\"is_a_duplicate\",\"value\":{\"value\":\"true\"}}]}", Filter.Dto.class);
+		assertThat(dto.getFields()).isNotEmpty();
+		Field.Dto field = dto.getFields().iterator().next();
+		assertThat(field.getName()).isEqualTo(FileDto.JSON_IS_A_DUPLICATE);
+		assertThat(field.getValue().getValue()).isEqualTo("true");
 	}
 	
 	@Test @Order(10)
@@ -274,7 +295,7 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(30)
 	public void business_countDuplicates() {
-		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE))).isEqualTo(0l);
+		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.IS_A_DUPLICATE,Boolean.TRUE))).isEqualTo(0l);
 	}
 	
 	@Test @Order(31)
@@ -289,7 +310,7 @@ public class FileTest extends AbstractTest {
 		assertThat(result.getCountsMap()).as("count map").isNotNull();
 		assertThat(result.getCountsMap().get(FileImpl.class)).as("file's count map").isNotNull();
 		assertThat(result.getCountsMap().get(FileImpl.class).get(Action.DELETE)).isEqualTo(1);
-		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.DUPLICATED,Boolean.TRUE))).isEqualTo(0l);
+		assertThat(persistence.count(new QueryExecutorArguments().addFilterFieldsValues(Parameters.IS_A_DUPLICATE,Boolean.TRUE))).isEqualTo(0l);
 		assertThat(persistence.count()).isEqualTo(count-1);
 
 		assertor.assertUniformResourceLocators(buildUrl("files/d1/d1_f1.txt"),buildUrl("files/d2/d2_f1.txt"),buildUrl("files/d3/d3_f1.txt"),buildUrl("files/d4/d4_f1.txt"),buildUrl("files/f1.txt")
@@ -322,5 +343,91 @@ public class FileTest extends AbstractTest {
 	@Test @Order(32)
 	public void persistence_filterAsString_d1_f1() {
 		assertor.assertFilterAsString("d1_f1",buildUrl("files_service/d1/d1_f1.txt"),buildUrl("files/d1/d1_f1.txt"),buildUrl("files02/d1/d1_f1.txt"));
+	}
+	
+	/* Export bytes */
+	
+	@SuppressWarnings("resource")
+	@Test @Order(33)
+	public void business_extract_bytes_1() {
+		new MockServerClient("localhost", WEB_SERVER_PORT)
+	    .when(HttpRequest.request().withMethod("GET").withPath("/f01.txt"))
+	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("Good job"));
+		
+		assertor.assertBytesByUniformResourceLocator("http://localhost:10000/f01.txt",null);
+		assertThat(fileBytesPersistence.count()).isEqualTo(1l);
+		business.extractBytes("meliane", "1");
+		assertor.assertBytesByUniformResourceLocator("http://localhost:10000/f01.txt","Good job".getBytes());
+		assertThat(fileBytesPersistence.count()).isEqualTo(2l);
+	}
+	
+	@SuppressWarnings("resource")
+	@Test @Order(34)
+	public void business_extract_bytes_2() {
+		new MockServerClient("localhost", WEB_SERVER_PORT)
+	    .when(HttpRequest.request().withMethod("GET").withPath("/f03.txt"))
+	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("hello world!"));
+		
+		assertor.assertBytesByUniformResourceLocator("http://localhost:10000/f03.txt","hello world!".getBytes());
+		assertThat(fileBytesPersistence.count()).isEqualTo(2l);
+		business.extractBytes("meliane", "2");
+		assertor.assertBytesByUniformResourceLocator("http://localhost:10000/f03.txt","hello world!".getBytes());
+		assertThat(fileBytesPersistence.count()).isEqualTo(2l);
+	}
+	
+	@SuppressWarnings("resource")
+	@Test @Order(34)
+	public void business_extract_text_3() {
+		new MockServerClient("localhost", WEB_SERVER_PORT)
+	    .when(HttpRequest.request().withMethod("GET").withPath("/f02.txt"))
+	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("Jesus"));
+		
+		assertor.assertTextByUniformResourceLocator("http://localhost:10000/f02.txt",null);
+		assertThat(fileTextPersistence.count()).isEqualTo(1l);
+		business.extractText("meliane", "3");
+		assertThat(fileTextPersistence.count()).isEqualTo(2l);
+		assertor.assertTextByUniformResourceLocator("http://localhost:10000/f02.txt","Jesus");
+	}
+	
+	@SuppressWarnings("resource")
+	@Test @Order(35)
+	public void business_extract_text_2() {
+		new MockServerClient("localhost", WEB_SERVER_PORT)
+	    .when(HttpRequest.request().withMethod("GET").withPath("/f03.txt"))
+	    .respond(org.mockserver.model.HttpResponse.response().withStatusCode(200).withBody("You are lord"));
+		
+		assertor.assertTextByUniformResourceLocator("http://localhost:10000/f03.txt","You are lord");
+		assertThat(fileTextPersistence.count()).isEqualTo(2l);
+		business.extractText("meliane", "2");
+		assertThat(fileTextPersistence.count()).isEqualTo(2l);
+		assertor.assertTextByUniformResourceLocator("http://localhost:10000/f03.txt","You are lord");
+	}
+	
+	@Test @Order(36)
+	public void business_extract_bytes_all() {
+		assertThat(fileBytesPersistence.count()).isEqualTo(2l);
+		business.extractBytesOfAll("meliane");
+		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+	}
+	
+	@Test @Order(37)
+	public void business_extract_bytes_all_again() {
+		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+		business.extractBytesOfAll("meliane");
+		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+	}
+	
+	@Test @Order(38)
+	public void business_extract_text_all() {
+		assertThat(fileTextPersistence.count()).isEqualTo(2l);
+		business.extractTextOfAll("meliane");
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
+	}
+	
+	@Test @Order(39)
+	public void business_extract_text_all_again() {
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
+		business.extractTextOfAll("meliane");
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
 	}
 }

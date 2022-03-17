@@ -39,6 +39,10 @@ import lombok.experimental.Accessors;
 		,@NamedQuery(name = FileImpl.QUERY_UPDATE_AUDITS_BY_IDENTIFIERS,query = "UPDATE FileImpl SET __auditIdentifier__ = :auditIdentifier,__auditFunctionality__ = :auditFunctionality,__auditWho__ = :auditWho,__auditWhat__ = :auditWhat,__auditWhen__ = :auditWhen WHERE identifier IN :identifiers")
 		//,@NamedQuery(name = FileImpl.QUERY_DELETE_HAVING_COUNT_SHA1_GREATER_THAN_ONE,query = "DELETE FROM FileImpl t WHERE t.sha1 IN (SELECT t.sha1 FROM FileImpl t WHERE t.sha1 IS NOT NULL GROUP BY t.sha1 HAVING COUNT(t.sha1) > 1)")
 		,@NamedQuery(name = FileImpl.QUERY_DELETE_BY_IDENTIFIERS,query = "DELETE FROM FileImpl t WHERE t.identifier IN :identifiers")
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_QUERY)
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_BY_IDENTIFIERS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_QUERY+" AND t.identifier IN :identifiers")
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY)
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY+" AND t.identifier IN :identifiers")
 })
 public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl implements File,Serializable{
 
@@ -122,6 +126,12 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE = "FileImpl.readSha1HavingCountSha1GreaterThanOne";
 	public static final String QUERY_UPDATE_AUDITS_BY_IDENTIFIERS = "FileImpl.updateAuditsByIdentifiers";
 	public static final String QUERY_DELETE_BY_IDENTIFIERS = "FileImpl.deleteByIdentifiers";
-	//public static final String QUERY_DELETE_HAVING_COUNT_SHA1_GREATER_THAN_ONE = "FileImpl.deleteHavingCountSha1GreaterThanOne";
-	//public static final String QUERY_COUNT_HAVING_COUNT_SHA1_GREATER_THAN_ONE = "FileImpl.countHavingCountSha1GreaterThanOne";
+	
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS = "FileImpl.readIdentifiersWhereBytesNotExists";
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_BY_IDENTIFIERS = "FileImpl.readIdentifiersWhereBytesNotExistsByIdentifiers";
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_QUERY = "SELECT t.identifier FROM FileImpl t WHERE NOT EXISTS(SELECT fb.identifier FROM FileBytesImpl fb WHERE fb.identifier = t.identifier)";
+	
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS = "FileImpl.readIdentifiersWhereTextNotExists";
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS = "FileImpl.readIdentifiersWhereTextNotExistsByIdentifiers";
+	public static final String QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY = "SELECT t.identifier FROM FileImpl t WHERE NOT EXISTS(SELECT ft.identifier FROM FileTextImpl ft WHERE ft.identifier = t.identifier)";
 }

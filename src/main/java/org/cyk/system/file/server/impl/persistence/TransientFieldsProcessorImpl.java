@@ -26,6 +26,10 @@ public class TransientFieldsProcessorImpl extends org.cyk.utility.persistence.se
 		for(String fieldName : fieldsNames) {
 			if(FileImpl.FIELDS_UNIFORM_RESOURCE_LOCATOR_NAME_AND_EXTENSION_MIME_TYPE_SIZE_BYTES.equals(fieldName))
 				new FileImplUniformResourceLocatorNameAndExtensionMimeTypeSizeBytesReader().readThenSet(files, null);
+			else if(FileImpl.FIELD_BYTES.equals(fieldName))
+				new FileImplBytesReader().readThenSet(files, null);
+			else if(FileImpl.FIELD_TEXT.equals(fieldName))
+				new FileImplTextReader().readThenSet(files, null);
 		}
 	}
 }

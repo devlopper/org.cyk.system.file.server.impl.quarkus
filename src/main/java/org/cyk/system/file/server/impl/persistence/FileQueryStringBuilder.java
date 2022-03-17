@@ -26,6 +26,9 @@ public interface FileQueryStringBuilder {
 	}
 	
 	public static interface Predicate {
+		static String __IS_NOT_DUPLICATE_CHECKER_FIELD__ = FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR;
+		static String __IS_NOT_DUPLICATE_CHECKER_FUNCTION__ = "MIN";
+		
 		static void populate(QueryExecutorArguments queryExecutorArguments, Arguments arguments, WhereStringBuilder.Predicate predicate,Filter filter) {
 			RuntimeQueryStringBuilderImpl.addEqualsIfFilterHasFieldWithPath(queryExecutorArguments, arguments, predicate, filter, Parameters.UNIFORM_RESOURCE_LOCATOR,"t",FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR);
 			RuntimeQueryStringBuilderImpl.addEqualsIfFilterHasFieldWithPath(queryExecutorArguments, arguments, predicate, filter, Parameters.SHA1,"t",FileImpl.FIELD_SHA1);
@@ -36,12 +39,12 @@ public interface FileQueryStringBuilder {
 				filter.addField(Parameters.SHA1, sha1s);
 			}
 			
-			Boolean dupliated = queryExecutorArguments.getFilterFieldValueAsBoolean(null,Parameters.DUPLICATED);
+			Boolean dupliated = queryExecutorArguments.getFilterFieldValueAsBoolean(null,Parameters.IS_A_DUPLICATE);
 			if(dupliated != null) {
 				if(dupliated)
-					predicate.add(String.format("sha1 IN (%s) AND identifier NOT IN (%s)", sha1CountIsGreaterThanOne(),hasDuplicate()));
+					predicate.add(String.format("sha1 IN (%s) AND %s NOT IN (%s)", SHA1_COUNT_IS_GREATER_THAN_ONE,__IS_NOT_DUPLICATE_CHECKER_FIELD__,HAS_DUPLICATE));
 				else
-					predicate.add(String.format("sha1 NOT IN (%s)", sha1CountIsGreaterThanOne()));
+					predicate.add(String.format("sha1 NOT IN (%s)", SHA1_COUNT_IS_GREATER_THAN_ONE));
 			}
 			
 			if(queryExecutorArguments.getFilterField(DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString()) != null) {
@@ -61,20 +64,13 @@ public interface FileQueryStringBuilder {
 		 * Query giving list of sha1 where count is greater than one
 		 * @return
 		 */
-		static String sha1CountIsGreaterThanOne() {
-			return "SELECT sha1 FROM FileImpl GROUP BY sha1 HAVING COUNT(sha1) > 1";
-		}
+		static String SHA1_COUNT_IS_GREATER_THAN_ONE = "SELECT sha1 FROM FileImpl GROUP BY sha1 HAVING COUNT(sha1) > 1";
 		
 		/**
 		 * Query giving list of file having duplicate
 		 * @return
 		 */
-		static String hasDuplicate() {
-			return "SELECT MAX(identifier)"
-			+ " FROM FileImpl"
-			+ " WHERE sha1 IN ("+sha1CountIsGreaterThanOne()+")"
-			+ "	GROUP BY sha1";
-		}
+		static String HAS_DUPLICATE = String.format("SELECT %s(%s) FROM FileImpl WHERE sha1 IN (%s) GROUP BY sha1",__IS_NOT_DUPLICATE_CHECKER_FUNCTION__,__IS_NOT_DUPLICATE_CHECKER_FIELD__,SHA1_COUNT_IS_GREATER_THAN_ONE);
 	}
 	
 	public static interface Group {
