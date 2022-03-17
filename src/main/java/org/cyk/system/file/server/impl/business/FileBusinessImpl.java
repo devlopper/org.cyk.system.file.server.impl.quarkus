@@ -1,5 +1,7 @@
 package org.cyk.system.file.server.impl.business;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -20,6 +22,13 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.sax.BodyContentHandler;
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
@@ -50,10 +59,13 @@ import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.xml.sax.ContentHandler;
 
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.EventBus;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
 
 @ApplicationScoped
 public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> implements FileBusiness,Serializable{
@@ -90,7 +102,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@ConfigProperty(name = "cyk.file.is.sha1.computation.parallel",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
 	Boolean isSha1ComputationParallel;
 	
-	@ConfigProperty(name = "cyk.file.is.text.extraction.runnable.after.creation",defaultValue = "true")
+	@ConfigProperty(name = "cyk.file.text.extraction.runnable.after.creation",defaultValue = "true")
 	Boolean isTextExtractionRunnableAfterCreation;
 	
 	@ConfigProperty(name = "cyk.file.importation.batch.size",defaultValue = "25")
@@ -103,6 +115,11 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	TimeUnit importExecutorTimeoutUnit;
 	
 	List<String> emptyPathsNames;
+	
+	@ConfigProperty(name = "cyk.file.text.ocr.tessaract.data.path",defaultValue = "/deployments/tessaract/data/")
+	String tessaractDataPath;
+	@ConfigProperty(name = "cyk.file.text.ocr.tessaract.language",defaultValue = "fra")
+	String tessaractLanguage;
 	
 	@Override
 	public Result countInDirectories(Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize, Long maximalSize) {
@@ -434,10 +451,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			void extract(Collection<Object[]> arrays,Result result,String auditIdentifier,String auditFunctionality,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
 				Collection<T> instances = new ArrayList<>();
 				arrays.stream().parallel().forEach(array -> {
-					byte[] bytes = getBytes(getUniformResourceLocator((Object[])array),result);
-					if(bytes == null)
+					byte[] bytes = getBytes(getUniformResourceLocator(array),result);
+					if(bytes == null || bytes.length == 0)
 						return;
-					T instance = instantiate( (String)(array)[0],bytes,getExtension(array),getMimeType(array),result);
+					T instance = instantiate( (String)(array)[0],getUniformResourceLocator(array),bytes,getExtension(array),getMimeType(array),result);
 					if(instance == null)
 						return;
 					audit(instance, auditIdentifier, auditFunctionality, auditWho, auditWhen);
@@ -473,17 +490,27 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				String auditIdentifier = getAuditIdentifier();
 				LocalDateTime auditWhen = LocalDateTime.now();
 				
-				Collection<String> identifiers = getEntityManager().createNamedQuery(getUnexistingQueryIdentifier(), String.class).getResultList();;
-				
-				Integer count = CollectionHelper.isEmpty(identifiers) ? 0 : extractOf(identifiers, result, auditIdentifier, getAllAuditFunctionality(), auditWho, auditWhen, getEntityManager());
-				
+				List<String> identifiers = getEntityManager().createNamedQuery(getUnexistingQueryIdentifier(), String.class).getResultList();;
+				Integer count = 0;
+				if(CollectionHelper.isNotEmpty(identifiers)) {
+					List<List<String>> batches = CollectionHelper.getBatches(identifiers, 5);
+					List<Integer> counts = new ArrayList<>();
+					batches.parallelStream().forEach(batch -> {
+						Integer c = extractOf(batch, result, auditIdentifier, getAllAuditFunctionality(), auditWho, auditWhen, getEntityManager());
+						synchronized(counts) {
+							counts.add(c);
+						}
+					});
+					for(Integer index : counts)
+						count = count + index;
+				}
 				// Return of message
 				result.close().setName(String.format("Extraction of all file's %s(%s) by %s",getDataName(),count,auditWho)).log(getClass());
 				result.addMessages(String.format("%s file's %s extracted",getDataName(),count));
 				return result;		
 			}
 			
-			abstract T instantiate(String identifier,byte[] bytes,String extension,String mimeType,Result result);
+			abstract T instantiate(String identifier,String uniformResourceLocator,byte[] bytes,String extension,String mimeType,Result result);
 			
 			String getAuditIdentifier() {
 				return generateAuditIdentifier(FileImpl.class);
@@ -546,7 +573,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		}
 		
 		@Override
-		FileBytesImpl instantiate(String identifier, byte[] bytes,String extension,String mimeType,Result result) {
+		FileBytesImpl instantiate(String identifier,String uniformResourceLocator, byte[] bytes,String extension,String mimeType,Result result) {
 			return new FileBytesImpl(identifier,bytes);
 		}
 		
@@ -579,13 +606,18 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		}
 		
 		@Override
-		FileTextImpl instantiate(String identifier, byte[] bytes,String extension,String mimeType,Result result) {
+		FileTextImpl instantiate(String identifier,String uniformResourceLocator, byte[] bytes,String extension,String mimeType,Result result) {
 			// Compute text from bytes depending on mime type
 			String text = null;
 			if(StringUtils.startsWithIgnoreCase(mimeType, "text/"))
-				text = new String(bytes);
+				text = getFromText(bytes, result);
+			else
+			    text = getFromPdf(bytes, result);
+			
+			text = StringUtils.stripToNull(text);
+			
 			if(text == null) {
-				result.addMessages(String.format("Cannot get text of <<%s>>", identifier));
+				result.addMessages(String.format("Cannot get text of %s | %s", identifier,uniformResourceLocator));
 				return null;
 			}
 			return new FileTextImpl(identifier,text);
@@ -599,6 +631,54 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		@Override
 		String getUnexistingQueryIdentifier() {
 			return FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS;
+		}
+		
+		String getFromText(byte[] bytes,Result result) {
+			return new String(bytes);
+		}
+		
+		String getFromPdf(byte[] bytes,Result result) {
+			try {
+				String text = null;//getFromPdfUsingTika(bytes, result);
+				if(text == null)
+					text = getFromPdfUsingTessaract(bytes, result);
+				return text;
+			}catch(Exception exception) {
+				result.addMessages(exception.getMessage());
+				return null;
+			}
+		}
+		
+		String getFromPdfUsingTessaract(byte[] bytes,Result result) throws Exception {
+			PDDocument document = PDDocument.load(bytes);
+			PDFRenderer pdfRenderer = new PDFRenderer(document);
+			ITesseract tesseract = new Tesseract();
+			tesseract.setDatapath(tessaractDataPath);
+			tesseract.setLanguage(tessaractLanguage);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (int page = 0; page < document.getNumberOfPages(); page++) {
+			    BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(page, 300);
+			    String string = tesseract.doOCR(bufferedImage);
+			    if(StringHelper.isBlank(string))
+			    	continue;
+			    stringBuilder.append(string);
+			}
+			return StringUtils.stripToNull(stringBuilder.toString());
+		}
+		
+		String getFromPdfUsingTika(byte[] bytes,Result result) {
+			Parser parser = new AutoDetectParser();
+		    ContentHandler handler = new BodyContentHandler();
+		    Metadata metadata = new Metadata();
+		    ParseContext context = new ParseContext();
+		    
+		    try {
+				parser.parse(new ByteArrayInputStream(bytes), handler, metadata, context);
+			} catch (Exception exception) {
+				result.addMessages(exception.getMessage());
+				return null;
+			}
+		    return StringUtils.stripToNull(handler.toString());
 		}
 	}
 }

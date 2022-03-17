@@ -8,7 +8,6 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -32,7 +31,7 @@ import lombok.experimental.Accessors;
 public class FileTextImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl implements FileText,Serializable {
 	private static final long serialVersionUID = 1L;
 
-	@NotNull @Lob @Column(name=COLUMN_TEXT,nullable = false) private String text;
+	@NotNull @Column(name=COLUMN_TEXT,nullable = false,length = 4096) private String text;
 	
 	public FileTextImpl() {}
 	

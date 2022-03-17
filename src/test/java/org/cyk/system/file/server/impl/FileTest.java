@@ -345,6 +345,11 @@ public class FileTest extends AbstractTest {
 		assertor.assertFilterAsString("d1_f1",buildUrl("files_service/d1/d1_f1.txt"),buildUrl("files/d1/d1_f1.txt"),buildUrl("files02/d1/d1_f1.txt"));
 	}
 	
+	@Test @Order(32)
+	public void persistence_filterAsString_you_are_lord() {
+		assertor.assertFilterAsString("you","http://localhost:10000/f03.txt");
+	}
+	
 	/* Export bytes */
 	
 	@SuppressWarnings("resource")
@@ -407,27 +412,38 @@ public class FileTest extends AbstractTest {
 	public void business_extract_bytes_all() {
 		assertThat(fileBytesPersistence.count()).isEqualTo(2l);
 		business.extractBytesOfAll("meliane");
-		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+		assertThat(fileBytesPersistence.count()).isEqualTo(12l);
 	}
 	
 	@Test @Order(37)
 	public void business_extract_bytes_all_again() {
-		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+		assertThat(fileBytesPersistence.count()).isEqualTo(12l);
 		business.extractBytesOfAll("meliane");
-		assertThat(fileBytesPersistence.count()).isEqualTo(13l);
+		assertThat(fileBytesPersistence.count()).isEqualTo(12l);
 	}
 	
 	@Test @Order(38)
 	public void business_extract_text_all() {
 		assertThat(fileTextPersistence.count()).isEqualTo(2l);
 		business.extractTextOfAll("meliane");
-		assertThat(fileTextPersistence.count()).isEqualTo(13l);
+		assertThat(fileTextPersistence.count()).isEqualTo(12l);
 	}
 	
 	@Test @Order(39)
 	public void business_extract_text_all_again() {
-		assertThat(fileTextPersistence.count()).isEqualTo(13l);
+		assertThat(fileTextPersistence.count()).isEqualTo(12l);
 		business.extractTextOfAll("meliane");
-		assertThat(fileTextPersistence.count()).isEqualTo(13l);
+		assertThat(fileTextPersistence.count()).isEqualTo(12l);
+	}
+	
+	@Test @Order(40)
+	public void business_extract_text_pdf() {
+		business.import_(List.of("src/test/resources/various_mime_type"), null, null, null, null, "meliane");
+		business.extractTextOfAll("meliane");
+		assertThat(fileTextPersistence.count()).isEqualTo(16l);
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf"),"Pour sauver son peuple");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf"),"le jour");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/fiche_activite.pdf"),"Programme : 22086 Budget");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/pdf_as_image.pdf"),"TELEPHONE");
 	}
 }

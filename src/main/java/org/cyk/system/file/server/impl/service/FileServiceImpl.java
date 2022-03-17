@@ -60,6 +60,26 @@ public class FileServiceImpl extends AbstractSpecificServiceImpl<FileDto,FileDto
 		return buildResponseOk(business.deleteDuplicates(auditWho));
 	}
 	
+	@Override
+	public Response extractBytes(List<String> identifiers, String auditWho) {
+		return buildResponseOk(business.extractBytes(identifiers, auditWho));
+	}
+	
+	@Override
+	public Response extractBytesOfAll(String auditWho) {
+		return buildResponseOk(business.extractBytesOfAll(auditWho));
+	}
+	
+	@Override
+	public Response extractText(List<String> identifiers, String auditWho) {
+		return buildResponseOk(business.extractText(identifiers, auditWho));
+	}
+	
+	@Override
+	public Response extractTextOfAll(String auditWho) {
+		return buildResponseOk(business.extractTextOfAll(auditWho));
+	}
+	
 	/**/
 	
 	static final String CONTENT_DISPOSITION_FORMAT = "%s; "+ConstantString.FILENAME+"=%s";	
