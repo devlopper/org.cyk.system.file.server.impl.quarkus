@@ -76,7 +76,7 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 	})
 	Response deleteDuplicates(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
 	
-	/*
+	
 	@POST
 	@Path("extraction-of-all-bytes")
 	@Produces({MediaType.TEXT_PLAIN})
@@ -85,7 +85,7 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 			@APIResponse(description = "Bytes of all files extracted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
 			,@APIResponse(description = "Error while extracting bytes of all files",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
-	Response extractBytesOfAll();
+	Response extractBytesOfAll(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
 	
 	@POST
 	@Path("extraction-of-bytes")
@@ -95,8 +95,28 @@ public interface FileService extends org.cyk.utility.service.SpecificService<Fil
 			@APIResponse(description = "Bytes of files extracted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
 			,@APIResponse(description = "Error while extracting bytes of files",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
 	})
-	Response extractBytes(@Parameter(name = PARAMETER_IDENTIFIERS) @QueryParam(PARAMETER_IDENTIFIERS) List<String> identifiers);
-	*/
+	Response extractBytes(@Parameter(name = PARAMETER_IDENTIFIERS) @QueryParam(PARAMETER_IDENTIFIERS) List<String> identifiers,@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
+	
+	@POST
+	@Path("extraction-of-all-text")
+	@Produces({MediaType.TEXT_PLAIN})
+	@Operation(description = "Extract all text of all files")
+	@APIResponses(value = {
+			@APIResponse(description = "Text of all files extracted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while extracting text of all files",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response extractTextOfAll(@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
+	
+	@POST
+	@Path("extraction-of-text")
+	@Produces({ MediaType.TEXT_PLAIN})
+	@Operation(description = "Extract text of files")
+	@APIResponses(value = {
+			@APIResponse(description = "Text of files extracted",responseCode = "200", content = @Content(mediaType = MediaType.TEXT_PLAIN))
+			,@APIResponse(description = "Error while extracting text of files",responseCode = "500", content = @Content(mediaType = MediaType.APPLICATION_JSON))
+	})
+	Response extractText(@Parameter(name = PARAMETER_IDENTIFIERS) @QueryParam(PARAMETER_IDENTIFIERS) List<String> identifiers,@Parameter(name = PARAMETER_USERNAME,required = true) @QueryParam(PARAMETER_USERNAME) String auditWho);
+	
 	/**/
 	
 	String PARAMETER_PATHS_NAMES = "paths";
