@@ -663,6 +663,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			    	continue;
 			    stringBuilder.append(string);
 			}
+			document.close();
 			return StringUtils.stripToNull(stringBuilder.toString());
 		}
 		
