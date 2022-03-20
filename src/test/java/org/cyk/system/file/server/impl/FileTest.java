@@ -443,7 +443,7 @@ public class FileTest extends AbstractTest {
 		assertThat(fileTextPersistence.count()).isEqualTo(16l);
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf"),"Pour sauver son peuple");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf"),"le jour");
-		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/fiche_activite.pdf"),"Programme : 22086 Budget");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/fiche_activite.pdf"),"22086 Budget");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/pdf_as_image.pdf"),"TELEPHONE");
 	}
 }
