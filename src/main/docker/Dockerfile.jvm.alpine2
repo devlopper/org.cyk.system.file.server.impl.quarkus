@@ -1,0 +1,60 @@
+FROM adoptopenjdk/openjdk11-openj9:jre-11.0.3_7_openj9-0.14.0-alpine
+
+#RUN apk update
+
+# Install tesseract library
+RUN apk add --no-cache tesseract-ocr
+
+# Download last language package
+RUN mkdir -p /usr/share/tessdata
+#ADD https://github.com/tesseract-ocr/tessdata/raw/master/ita.traineddata /usr/share/tessdata/ita.traineddata
+
+# Check the installation status
+RUN tesseract --list-langs    
+RUN tesseract -v 
+
+# -- DATABASE MANAGEMENT SYSTEM : MYSQL --
+ENV DB_HOST localhost
+ENV DB_PORT 3306
+ENV DB_USER root
+ENV DB_PASSWORD root
+ENV DB_SCHEMA file
+
+ENV DATASOURCE_JDBC_URL 'jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_SCHEMA}'
+ENV DATASOURCE_USER '${DB_USER}'
+ENV DATASOURCE_PASS '${DB_PASSWORD}'
+
+ARG JAVA_PACKAGE=java-11-openjdk-headless
+ARG RUN_JAVA_VERSION=1.3.8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+# Install java and the run-java script
+# Also set up permissions for user `1001`
+
+RUN apk --no-cache add curl
+# ca-certificates ${JAVA_PACKAGE}
+RUN curl --version
+#RUN update
+#RUN clean all
+RUN mkdir /deployments
+RUN chown 1001 /deployments
+RUN chmod "g+rwX" /deployments
+RUN chown 1001:root /deployments
+RUN curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/${RUN_JAVA_VERSION}/run-java-sh-${RUN_JAVA_VERSION}-sh.sh -o /deployments/run-java.sh
+RUN chown 1001 /deployments/run-java.sh
+RUN chmod 540 /deployments/run-java.sh
+#RUN echo "securerandom.source=file:/dev/urandom" >> /etc/alternatives/jre/conf/security/java.security
+
+# Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -XshowSettings:vm"
+# We make four distinct layers so if there are application changes the library layers can be re-used
+COPY --chown=1001 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=1001 target/quarkus-app/*.jar /deployments/
+COPY --chown=1001 target/quarkus-app/app/ /deployments/app/
+COPY --chown=1001 target/quarkus-app/quarkus/ /deployments/quarkus/
+#COPY --chown=1001 tessaract/data/ /deployments/tessaract/data/
+
+EXPOSE 8080
+USER 1001
+
+ENTRYPOINT [ "/deployments/run-java.sh" ]
+

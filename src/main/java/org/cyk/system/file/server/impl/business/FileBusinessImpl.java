@@ -116,9 +116,9 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	
 	List<String> emptyPathsNames;
 	
-	@ConfigProperty(name = "cyk.file.text.ocr.tessaract.data.path",defaultValue = "/deployments/tessaract/data/")
+	@ConfigProperty(name = "cyk.file.ocr.tesseract.data.path",defaultValue = "/usr/local/share/tessdata")
 	String tessaractDataPath;
-	@ConfigProperty(name = "cyk.file.text.ocr.tessaract.language",defaultValue = "fra")
+	@ConfigProperty(name = "cyk.file.ocr.tessaract.language",defaultValue = "fra")
 	String tessaractLanguage;
 	
 	@Override
