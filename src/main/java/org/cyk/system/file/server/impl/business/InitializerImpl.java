@@ -3,6 +3,7 @@ import java.io.Serializable;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import org.apache.tika.Tika;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
 import org.cyk.utility.__kernel__.klass.ClassHelper;
 import org.cyk.utility.__kernel__.random.RandomHelper;

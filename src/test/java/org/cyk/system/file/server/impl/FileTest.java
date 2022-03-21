@@ -455,16 +455,20 @@ public class FileTest extends AbstractTest {
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/word.docx")));
 		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
+		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/worddocx")));
+		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
+		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf")));
 		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
-		assertThat(fileTextPersistence.count()).isEqualTo(18l);
+		assertThat(fileTextPersistence.count()).isEqualTo(19l);
 		
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf"),"Pour sauver son peuple");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf"),"le jour");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/fiche_activite.pdf"),"22086 Budget");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/pdf_as_image.pdf"),"TELEPHONE");
-		//assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/word.docx"),"This is my sheet");
-		//assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf"),"This is my sheet rtf too");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/word.docx"),"This is my sheet with extension");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/worddocx"),"This is my sheet");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf"),"This is my sheet rtf too");
 	}
 }

@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -247,6 +248,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			paths.forEach(path -> map.put(path, null));
 
 		//Instantiate
+		Tika tika = new Tika();
 		map.forEach((path,sha1) -> {
 			FileImpl file = new FileImpl();
 			file.setIdentifier(IdentifiableSystem.generateRandomly());
@@ -255,6 +257,16 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			file.setUniformResourceLocator(path.toFile().toURI().toString());
 			file.setSha1(sha1);
 			Initializer.getInstance().initialize(FileImpl.class, file,IMPORT_AUDIT_IDENTIFIER);
+			
+			if(StringHelper.isBlank(file.getMimeType()))
+				try {
+					file.setMimeType(tika.detect(path.toFile()));
+				} catch (IOException exception) {
+					synchronized(result) {
+						result.addMessages(exception.getMessage());
+					}
+				}
+			
 			if(StringHelper.isBlank(file.getMimeType())) {
 				result.addMessages(String.format("%s has no mime type", file.getUniformResourceLocator()));
 				return;
