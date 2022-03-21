@@ -7,6 +7,8 @@ import javax.persistence.EntityManager;
 
 public interface FilePersistence extends org.cyk.utility.persistence.SpecificPersistence<File>{
 
+	String readIdentifierByUniformResourceLocator(String uniformResourceLocator);
+	
 	Collection<String> readUniformResourceLocators();
 
 	Collection<String> readSha1s();
