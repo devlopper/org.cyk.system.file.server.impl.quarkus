@@ -7,10 +7,12 @@ import java.util.Collection;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 
 import org.cyk.quarkus.extension.hibernate.orm.AbstractSpecificPersistenceImpl;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
+import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.utility.__kernel__.collection.CollectionHelper;
 import org.cyk.utility.persistence.entity.EntityLifeCycleListener;
 
@@ -22,6 +24,15 @@ public class FilePersistenceImpl extends AbstractSpecificPersistenceImpl<File>  
 	public FilePersistenceImpl() {
 		entityClass = File.class;
 		entityImplClass = FileImpl.class;
+	}
+	
+	@Override
+	public String readIdentifierByUniformResourceLocator(String uniformResourceLocator) {
+		try {
+			return entityManager.createNamedQuery(FileImpl.QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR, String.class).setParameter(Parameters.UNIFORM_RESOURCE_LOCATOR, uniformResourceLocator).getSingleResult();
+		} catch (NoResultException exception) {
+			return null;
+		}
 	}
 
 	@Override

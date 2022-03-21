@@ -2,6 +2,7 @@ package org.cyk.system.file.server.impl.business;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ import javax.transaction.Transactional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -78,7 +80,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@ConfigProperty(name = "cyk.file.directories.default",defaultValue = DEFAULT_DIRECTORIES)
 	List<String> directories;
 	
-	public static final String DEFAULT_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION = ".pdf|.txt";
+	public static final String DEFAULT_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION = ".pdf|.txt|.docx|.doc|.rtf|.jpeg|.jpg|.png|.bmp|.gif";
 	@ConfigProperty(name = "cyk.file.extension.default.accepted.path.name.regular.expression",defaultValue = DEFAULT_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION)
 	String acceptedPathNameRegularExpression;
 	
@@ -611,9 +613,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			String text = null;
 			if(StringUtils.startsWithIgnoreCase(mimeType, "text/"))
 				text = getFromText(bytes, result);
+			else if(StringUtils.startsWithIgnoreCase(mimeType, "application/pdf"))
+			    text = getTextFromPdf(bytes, result);
 			else
-			    text = getFromPdf(bytes, result);
-			
+			    text = getTextFromOthers(bytes, result);
 			text = StringUtils.stripToNull(text);
 			
 			if(text == null) {
@@ -637,20 +640,32 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			return new String(bytes);
 		}
 		
-		String getFromPdf(byte[] bytes,Result result) {
+		String getTextFromPdf(byte[] bytes,Result result) {
+			PDDocument document = null;
 			try {
-				String text = null;//getFromPdfUsingTika(bytes, result);
-				if(text == null)
-					text = getFromPdfUsingTessaract(bytes, result);
+				document = PDDocument.load(bytes);
+				PDFTextStripper textStripper = new PDFTextStripper();
+				String text = StringUtils.stripToNull(textStripper.getText(document));
+				if (text == null || text.isBlank())
+					text = getTextFromPdfUsingImageProcessing(document,result);
+				else
+					result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_TEXT);
 				return text;
 			}catch(Exception exception) {
 				result.addMessages(exception.getMessage());
 				return null;
+			}finally {
+				if(document != null)
+					try {
+						document.close();
+					} catch (IOException exception) {
+						result.addMessages(exception.getMessage());
+					}
 			}
 		}
 		
-		String getFromPdfUsingTessaract(byte[] bytes,Result result) throws Exception {
-			PDDocument document = PDDocument.load(bytes);
+		String getTextFromPdfUsingImageProcessing(PDDocument document,Result result) throws Exception {
+			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_IMAGE);
 			PDFRenderer pdfRenderer = new PDFRenderer(document);
 			ITesseract tesseract = new Tesseract();
 			tesseract.setDatapath(tessaractDataPath);
@@ -663,11 +678,12 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			    	continue;
 			    stringBuilder.append(string);
 			}
-			document.close();
+			
 			return StringUtils.stripToNull(stringBuilder.toString());
 		}
 		
-		String getFromPdfUsingTika(byte[] bytes,Result result) {
+		String getTextFromOthers(byte[] bytes,Result result) {
+			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_OTHERS);
 			Parser parser = new AutoDetectParser();
 		    ContentHandler handler = new BodyContentHandler();
 		    Metadata metadata = new Metadata();
@@ -681,5 +697,14 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			}
 		    return StringUtils.stripToNull(handler.toString());
 		}
+	}
+	
+	public static enum ResultKey {
+		TEXT_EXTRACTOR
+		;
+		
+		public static final String TEXT_EXTRACTOR_TEXT = "TEXT_EXTRACTOR_TEXT";
+		public static final String TEXT_EXTRACTOR_IMAGE = "TEXT_EXTRACTOR_IMAGE";
+		public static final String TEXT_EXTRACTOR_OTHERS = "TEXT_EXTRACTOR_OTHERS";
 	}
 }

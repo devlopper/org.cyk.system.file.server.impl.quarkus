@@ -15,6 +15,7 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
 import org.cyk.system.file.server.api.persistence.File;
+import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.utility.persistence.entity.AbstractIdentifiableSystemScalarStringAuditedImpl;
 
 import lombok.Getter;
@@ -33,6 +34,7 @@ import lombok.experimental.Accessors;
 })
 @NamedQueries(value = {
 		@NamedQuery(name = FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" ASC")
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_IDENTIFIER+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" = :"+Parameters.UNIFORM_RESOURCE_LOCATOR)
 		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1,query = "SELECT t."+FileImpl.FIELD_SHA1+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NOT NULL ORDER BY t."+FileImpl.FIELD_SHA1+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_WHERE_SHA1_IS_NULL,query = "SELECT t FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NULL ORDER BY t."+FileImpl.FIELD_IDENTIFIER+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE,query = "SELECT t.sha1 FROM FileImpl t WHERE t.sha1 IS NOT NULL GROUP BY t.sha1 HAVING COUNT(t.sha1) > 1")
@@ -64,7 +66,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	 * */
 	
 	@Column(name=COLUMN_EXTENSION,length=10) String extension;
-	@NotNull @Column(name=COLUMN_MIME_TYPE,nullable = false,length=50) String mimeType;
+	@NotNull @Column(name=COLUMN_MIME_TYPE,nullable = false,length=100) String mimeType;
 	@NotNull @Column(name=COLUMN_SIZE,nullable = false) Long size;
 	@Column(name=COLUMN_SHA1,length=40) String sha1;
 
@@ -120,6 +122,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String COLUMN___AUDIT_FUNCTIONALITY__ = "AUDIT_FUNCTIONALITY";
 	public static final String COLUMN___AUDIT_WHEN__ = "AUDIT_DATE";
 	
+	public static final String QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readIdentifierByUniformResourceLocator";
 	public static final String QUERY_READ_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readUniformResourceLocator";
 	public static final String QUERY_READ_SHA1 = "FileImpl.readSha1";
 	public static final String QUERY_READ_WHERE_SHA1_IS_NULL = "FileImpl.readWhereSha1IsNull";
