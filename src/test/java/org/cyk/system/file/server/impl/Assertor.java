@@ -65,4 +65,11 @@ public class Assertor {
 		assertThat(file).as("File at <<"+uniformResourceLocator+">> found").isNotNull();
 		assertThat(file.getText()).as("text of file at <<"+uniformResourceLocator+">>").contains(expectedText);
 	}
+	
+	public void assertTextContainsIgnoreCaseByUniformResourceLocator(String uniformResourceLocator,String expectedText) {
+		FileImpl file = (FileImpl) filePersistence.readOne(new QueryExecutorArguments().addProjectionsFromStrings(FileImpl.FIELD_TEXT)
+				.addFilterFieldsValues(Parameters.UNIFORM_RESOURCE_LOCATOR,uniformResourceLocator));
+		assertThat(file).as("File at <<"+uniformResourceLocator+">> found").isNotNull();
+		assertThat(file.getText()).as("text of file at <<"+uniformResourceLocator+">>").containsIgnoringCase(expectedText);
+	}
 }

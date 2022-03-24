@@ -18,5 +18,18 @@ public interface Profile extends org.cyk.quarkus.extension.test.Profile {
 		public Set<String> tags() {
 			return org.cyk.quarkus.extension.test.Profile.buildTags(File.class);
 		}
-	}	
+	}
+	
+	public class FileText implements QuarkusTestProfile{
+		@Override
+		public Map<String, String> getConfigOverrides() {
+			Map<String, String> map = org.cyk.quarkus.extension.test.Profile.buildConfig(FileText.class);
+			return map;
+		}
+		
+		@Override
+		public Set<String> tags() {
+			return org.cyk.quarkus.extension.test.Profile.buildTags(FileText.class);
+		}
+	}
 }

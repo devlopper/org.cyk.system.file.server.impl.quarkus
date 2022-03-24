@@ -33,9 +33,11 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.cyk.system.file.server.api.business.FileBusiness;
+import org.cyk.system.file.server.api.business.FileTextBusiness;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
+import org.cyk.system.file.server.impl.configuration.Configuration;
 import org.cyk.system.file.server.impl.persistence.FileBytesImpl;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
 import org.cyk.system.file.server.impl.persistence.FileImplUniformResourceLocatorExtensionMimeTypeReader;
@@ -61,7 +63,6 @@ import org.cyk.utility.file.PathsScanner;
 import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.xml.sax.ContentHandler;
 
 import io.quarkus.scheduler.Scheduled;
@@ -75,59 +76,16 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 
 	@Inject EntityManager entityManager;
 	@Inject EventBus eventBus;
+	
 	@Inject FilePersistence persistence;
-
-	public static final String DEFAULT_DIRECTORIES = "data/files";
-	@ConfigProperty(name = "cyk.file.directories.default",defaultValue = DEFAULT_DIRECTORIES)
-	List<String> directories;
+	@Inject FileTextBusiness fileTextBusiness;
 	
-	public static final String DEFAULT_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION = ".pdf|.txt|.docx|.doc|.rtf|.jpeg|.jpg|.png|.bmp|.gif";
-	@ConfigProperty(name = "cyk.file.extension.default.accepted.path.name.regular.expression",defaultValue = DEFAULT_ACCEPTED_PATH_NAME_REGULAR_EXPRESSION)
-	String acceptedPathNameRegularExpression;
-	
-	public static final String DEFAULT_MINIMAL_FILE_SIZE_AS_STRING = "1";
-	public static final Long DEFAULT_MINIMAL_FILE_SIZE_AS_LONG = Long.valueOf(DEFAULT_MINIMAL_FILE_SIZE_AS_STRING);
-	@ConfigProperty(name = "cyk.file.minimal.size",defaultValue = DEFAULT_MINIMAL_FILE_SIZE_AS_STRING)
-	Long minimalSize;
-	
-	public static final String DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING = "1048576";
-	public static final Long DEFAULT_MAXIMAL_FILE_SIZE_AS_LONG = Long.valueOf(DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING);
-	@ConfigProperty(name = "cyk.file.maximal.size",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
-	Long maximalSize;
-	
-	public static final String DEFAULT_DUPLICATE_ALLOWED_AS_STRING = "false";
-	public static final Boolean DEFAULT_DUPLICATE_ALLOWED_AS_BOOLEAN = Boolean.valueOf(DEFAULT_DUPLICATE_ALLOWED_AS_STRING);
-	@ConfigProperty(name = "cyk.file.duplicate.allowed",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
-	Boolean isDuplicateAllowed;
-	
-	public static final String DEFAULT_IS_SHA1_COMPUTATION_PARALLEL_AS_STRING = "false";
-	public static final Boolean DEFAULT_IS_SHA1_COMPUTATION_PARALLEL_AS_BOOLEAN = Boolean.valueOf(DEFAULT_DUPLICATE_ALLOWED_AS_STRING);
-	@ConfigProperty(name = "cyk.file.is.sha1.computation.parallel",defaultValue = DEFAULT_MAXIMAL_FILE_SIZE_AS_STRING)
-	Boolean isSha1ComputationParallel;
-	
-	@ConfigProperty(name = "cyk.file.text.extraction.runnable.after.creation",defaultValue = "true")
-	Boolean isTextExtractionRunnableAfterCreation;
-	
-	@ConfigProperty(name = "cyk.file.importation.batch.size",defaultValue = "25")
-	Integer importBatchSize;
-	@ConfigProperty(name = "cyk.file.importation.executor.thread.count",defaultValue = "4")
-	Integer importExecutorThreadCount;
-	@ConfigProperty(name = "cyk.file.importation.executor.timeout.duration",defaultValue = "5")
-	Long importExecutorTimeoutDuration;
-	@ConfigProperty(name = "cyk.file.importation.executor.timeout.unit",defaultValue = "MINUTES")
-	TimeUnit importExecutorTimeoutUnit;
-	
-	List<String> emptyPathsNames;
-	
-	@ConfigProperty(name = "cyk.file.ocr.tesseract.data.path",defaultValue = "/usr/local/share/tessdata")
-	String tessaractDataPath;
-	@ConfigProperty(name = "cyk.file.ocr.tessaract.language",defaultValue = "fra")
-	String tessaractLanguage;
+	@Inject Configuration configuration;
 	
 	@Override
 	public Result countInDirectories(Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize, Long maximalSize) {
 		Result result = new Result().open();
-		FileValidator.validateCountInDirectoriesInputs(directories,pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize);
+		FileValidator.validateCountInDirectoriesInputs(configuration.file().directories().default_(),pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize);
 		
 		pathsNames = normalizePathsNames(pathsNames);
 		acceptedPathNameRegularExpression = normalizeAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression);
@@ -144,7 +102,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	@Override
 	public Result import_(Collection<String> pathsNames, String acceptedPathNameRegularExpression,Long minimalSize,Long maximalSize,Boolean isDuplicateAllowed,String auditWho) {
 		Result result = new Result().open();
-		FileValidator.validateImportInputs(directories,pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize,isDuplicateAllowed, auditWho);
+		FileValidator.validateImportInputs(configuration.file().directories().default_(),pathsNames, acceptedPathNameRegularExpression, minimalSize, maximalSize,isDuplicateAllowed, auditWho);
 		
 		pathsNames = normalizePathsNames(pathsNames);
 		acceptedPathNameRegularExpression = normalizeAcceptedPathNameRegularExpression(acceptedPathNameRegularExpression);
@@ -184,7 +142,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			new BatchProcessor.AbstractImpl<Path>() {
 				@Override
 				protected String getName() {
-					return String.format("Importation from directories : %s - Paths count : %s|%s - Is sha1 computation parallel : %s", directories,lPaths.size(),paths.size(),isSha1ComputationParallel);
+					return String.format("Importation from directories : %s - Paths count : %s|%s - Is sha1 computation parallel : %s", directories,lPaths.size(),paths.size(),configuration.file().sha1().computation().parallelized());
 				}
 				@Override
 				protected void __process__(List<Path> paths, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
@@ -192,19 +150,19 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				}
 				@Override
 				protected Integer getSize() {
-					return importBatchSize;
+					return configuration.file().importation().batch().size();
 				}
 				@Override
 				protected Integer getExecutorThreadCount() {
-					return importExecutorThreadCount;
+					return configuration.file().importation().executor().threadCount();
 				}
 				@Override
 				protected Long getExecutorTimeoutDuration() {
-					return importExecutorTimeoutDuration;
+					return configuration.file().importation().executor().timeout().duration();
 				}
 				@Override
 				protected TimeUnit getExecutorTimeoutUnit() {
-					return importExecutorTimeoutUnit;
+					return configuration.file().importation().executor().timeout().unit();
 				}
 			}.process(lPaths);
 		}
@@ -213,7 +171,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		result.close().setName(String.format("Importation of %s file(s)",files.size())).log(getClass());
 		result.addMessages(String.format("Number of files imported : %s",files.size()));
 		
-		if(Boolean.TRUE.equals(isTextExtractionRunnableAfterCreation))
+		if(Boolean.TRUE.equals(configuration.file().text().extraction().runnableAfterCreation()))
 			eventBus.request(EVENT_CHANNEL_EXTRACT_TEXT_OF_ALL, null);
 		
 		return result;
@@ -226,7 +184,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		final Map<Path,String> map = new LinkedHashMap<>();
 		if(Boolean.FALSE.equals(isDuplicateAllowed)) {
 			//Compute all sha1
-			(Boolean.TRUE.equals(isSha1ComputationParallel) ? paths.parallelStream() : paths.stream()).forEach(path -> {
+			(configuration.file().sha1().computation().parallelized() ? paths.parallelStream() : paths.stream()).forEach(path -> {
 				pathsSha1s.put(path, FileHelper.computeSha1(getBytes(path.toFile().toURI().toString(), result)));
 			});
 
@@ -248,7 +206,6 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			paths.forEach(path -> map.put(path, null));
 
 		//Instantiate
-		Tika tika = new Tika();
 		map.forEach((path,sha1) -> {
 			FileImpl file = new FileImpl();
 			file.setIdentifier(IdentifiableSystem.generateRandomly());
@@ -260,7 +217,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			
 			if(StringHelper.isBlank(file.getMimeType()))
 				try {
-					file.setMimeType(tika.detect(path.toFile()));
+					file.setMimeType(TIKA.detect(path.toFile()));
 				} catch (IOException exception) {
 					synchronized(result) {
 						result.addMessages(exception.getMessage());
@@ -403,32 +360,32 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	
 	Collection<String> normalizePathsNames(Collection<String> pathsNames) {
 		if(CollectionHelper.isEmpty(pathsNames))
-			return directories;	
+			return configuration.file().directories().default_();	
 		return pathsNames;
 	}
 	
 	String normalizeAcceptedPathNameRegularExpression(String acceptedPathNameRegularExpression) {
 		if(StringHelper.isBlank(acceptedPathNameRegularExpression))
-			return this.acceptedPathNameRegularExpression;
+			return configuration.file().acceptedPath().name().regularExpression();
 		return acceptedPathNameRegularExpression;
 	}
 	
 	Long normalizeMinimalSize(Long minimalSize) {
 		if(minimalSize == null || minimalSize < 0)
-			return this.minimalSize;
+			return configuration.file().size().minimal();
 		return minimalSize;
 	}
 	
 	
 	Long normalizeMaximalSize(Long maximalSize,Long minimalSize) {
 		if(NumberHelper.compare(minimalSize, maximalSize, ComparisonOperator.GTE))
-			return this.maximalSize;
+			return configuration.file().size().maximal();
 		return maximalSize;
 	}
 	
 	Boolean normalizeIsDuplicateAllowed(Boolean isDuplicateAllowed) {
 		if(isDuplicateAllowed == null)
-			return this.isDuplicateAllowed;
+			return configuration.file().duplicate().allowed();
 		return isDuplicateAllowed;
 	}
 	
@@ -629,7 +586,6 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			    text = getTextFromPdf(bytes, result);
 			else
 			    text = getTextFromOthers(bytes, result);
-			text = StringUtils.stripToNull(text);
 			
 			if(text == null) {
 				result.addMessages(String.format("Cannot get text of %s | %s", identifier,uniformResourceLocator));
@@ -680,8 +636,8 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_IMAGE);
 			PDFRenderer pdfRenderer = new PDFRenderer(document);
 			ITesseract tesseract = new Tesseract();
-			tesseract.setDatapath(tessaractDataPath);
-			tesseract.setLanguage(tessaractLanguage);
+			tesseract.setDatapath(configuration.file().opticalCharacterRecognition().tesseract().data().path());
+			tesseract.setLanguage(configuration.file().opticalCharacterRecognition().tesseract().language());
 			StringBuilder stringBuilder = new StringBuilder();
 			for (int page = 0; page < document.getNumberOfPages(); page++) {
 			    BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(page, 300);
@@ -690,8 +646,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			    	continue;
 			    stringBuilder.append(string);
 			}
-			
-			return StringUtils.stripToNull(stringBuilder.toString());
+			return fileTextBusiness.normalize(stringBuilder.toString());
 		}
 		
 		String getTextFromOthers(byte[] bytes,Result result) {
@@ -710,6 +665,8 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		    return StringUtils.stripToNull(handler.toString());
 		}
 	}
+	
+	public static final Tika TIKA = new Tika();
 	
 	public static enum ResultKey {
 		TEXT_EXTRACTOR
