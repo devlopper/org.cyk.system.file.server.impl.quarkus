@@ -36,13 +36,13 @@ public class FileTextBusinessImpl extends AbstractSpecificBusinessImpl<FileText>
 		}
 		
 		text = text.lines().filter(line -> {
-			if(line.length() < configuration.file().text().line().minimalLenght())
+			if(line.length() < configuration.file().text().line().minimalLength())
 				return Boolean.FALSE;
 			String[] words = line.split(configuration.file().text().line().word().separator());
 			if(words != null && words.length > 0) {
 				Integer count = 0;
 				for(String word : words)
-					if(word.strip().length() < configuration.file().text().line().word().minimalLenght())
+					if(word.strip().length() < configuration.file().text().line().word().minimalLength())
 						count++;
 				
 				if( ((words.length-count)*1.0 / words.length) < configuration.file().text().line().word().minimalRate())
@@ -52,6 +52,12 @@ public class FileTextBusinessImpl extends AbstractSpecificBusinessImpl<FileText>
 		}).collect(Collectors.joining(configuration.file().text().line().separator()));
 		if(StringHelper.isBlank(text))
 			return null;
+		
+		if(text.length() < configuration.file().text().minimalLength())
+			return null;
+		
+		if(text.length() > configuration.file().text().maximalLength())
+			text = text.substring(0, configuration.file().text().maximalLength().intValue());
 		
 		return text;
 	}

@@ -32,4 +32,17 @@ public interface Profile extends org.cyk.quarkus.extension.test.Profile {
 			return org.cyk.quarkus.extension.test.Profile.buildTags(FileText.class);
 		}
 	}
+	
+	public class Tika implements QuarkusTestProfile{
+		@Override
+		public Map<String, String> getConfigOverrides() {
+			Map<String, String> map = org.cyk.quarkus.extension.test.Profile.buildConfig(Tika.class);
+			return map;
+		}
+		
+		@Override
+		public Set<String> tags() {
+			return org.cyk.quarkus.extension.test.Profile.buildTags(Tika.class);
+		}
+	}
 }

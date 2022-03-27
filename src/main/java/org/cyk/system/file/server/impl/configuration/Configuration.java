@@ -1,9 +1,13 @@
 package org.cyk.system.file.server.impl.configuration;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.constraints.Max;
+
 import org.apache.commons.lang3.RegExUtils;
+import org.cyk.utility.__kernel__.number.NumberHelper;
 
 import io.quarkus.runtime.annotations.StaticInitSafe;
 import io.smallrye.config.ConfigMapping;
@@ -110,11 +114,9 @@ public interface Configuration {
 			List<Replacer> replacers();
 
 			interface Replacer {
-				@WithName("regular.expression")
 				@WithConverter(StringConverter.class)
 				String regularExpression();
 				
-				@WithName("replacement")
 				@WithConverter(StringConverter.class)
 				String replacement();
 			}
@@ -143,7 +145,7 @@ public interface Configuration {
 				String separator();
 				
 				@WithDefault("3")
-				Integer minimalLenght();
+				Integer minimalLength();
 				
 				Word word();
 				
@@ -152,7 +154,7 @@ public interface Configuration {
 					String separator();
 					
 					@WithDefault("3")
-					Integer minimalLenght();
+					Integer minimalLength();
 					
 					@WithDefault("0.5")
 					Float minimalRate();
@@ -160,6 +162,15 @@ public interface Configuration {
 				
 				//List<Replacer> replacers();
 			}
+		
+			@WithDefault("3")
+			@WithConverter(LongConverter.class)
+			Long minimalLength();
+			
+			@WithConverter(LongConverter.class)
+			@Max(value = Long.MAX_VALUE)
+			@WithDefault("9223372036854775807")
+			Long maximalLength();
 		}
 	}
 	
@@ -179,14 +190,44 @@ public interface Configuration {
 			String language();
 		}
 	}
+	
+	Tika tika();
+	
+	interface Tika {
+		Server server();
+		interface Server {
+			Tests tests();
+			
+			interface Tests {
+				@WithDefault("false")
+				Boolean runnable();
+			}
+		}
+	}
 
-	static class StringConverter implements  org.eclipse.microprofile.config.spi.Converter<String> {
+	static abstract class AbstractConverter<T> implements  org.eclipse.microprofile.config.spi.Converter<T> ,Serializable{
 		public static final String SPACE_MARKER = "__CHAR__SPACE__";
 	    @Override
-	    public String convert(String value) {
+	    public T convert(String value) {
 	    	if(value == null)
-	        	return value;
-	    	return RegExUtils.replaceAll(value, SPACE_MARKER, " ");
+	        	return null;
+	    	return __convert__(RegExUtils.replaceAll(value, SPACE_MARKER, " "));
 	    }
+	    
+	    abstract T __convert__(String value);
+	}
+	
+	static class StringConverter extends AbstractConverter<String>  implements Serializable {
+		@Override
+		String __convert__(String value) {
+			return value;
+		}
+	}
+	
+	static class LongConverter extends AbstractConverter<Long>  implements Serializable {
+		@Override
+		Long __convert__(String value) {
+			return NumberHelper.getLong(value,0l);
+		}
 	}
 }
