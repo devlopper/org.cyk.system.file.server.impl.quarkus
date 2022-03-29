@@ -23,19 +23,10 @@ import io.quarkus.test.junit.TestProfile;
 @QuarkusTest
 @TestProfile(Profile.Tika.class)
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public class TikaTest extends AbstractTest {
+public class TikaTest extends AbstractTikaTest {
 
 	@Inject @RestClient TikaClient client;
-	@Inject Configuration configuration;
-	
-	boolean isTestRunnable() {
-		if(!configuration.tika().server().tests().runnable()) {
-			LogHelper.logWarning(String.format("%1$s %2$s %1$s", StringUtils.repeat("#", 30),"Tika server tests are not runnable"), getClass());
-			return false;
-		}
-		return true;
-	}
-	
+
 	@Test
 	public void ping() throws Exception {
 		if(!isTestRunnable())
@@ -82,7 +73,7 @@ public class TikaTest extends AbstractTest {
 		}
 		for(Configuration.Tika.Server.Tests.Fetch fetch : configuration.tika().server().tests().fetchs()) {
 			LogHelper.logInfo(String.format("%1$s Fetch %2$s using %3$s %1$s",  StringUtils.repeat("#", 20),fetch.key(),fetch.fetcherName()), getClass());
-			TikaDto dto = client.getTextByFetch(fetch.fetcherName(), fetch.key());
+			TikaDto dto = client.getTextByFetch(fetch.fetcherName(), fetch.key(),null,null);
 			assertThat(dto).isNotNull();
 			assertThat(dto.getContent()).contains(fetch.result().subString());
 		}		

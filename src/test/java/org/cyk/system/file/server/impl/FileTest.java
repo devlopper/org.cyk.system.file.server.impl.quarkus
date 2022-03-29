@@ -427,41 +427,41 @@ public class FileTest extends AbstractTest {
 	public void business_extract_text_all() {
 		assertThat(fileTextPersistence.count()).isEqualTo(2l);
 		business.extractTextOfAll("meliane");
-		assertThat(fileTextPersistence.count()).isEqualTo(12l);
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
 	}
 	
 	@Test @Order(39)
 	public void business_extract_text_all_again() {
-		assertThat(fileTextPersistence.count()).isEqualTo(12l);
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
 		business.extractTextOfAll("meliane");
-		assertThat(fileTextPersistence.count()).isEqualTo(12l);
+		assertThat(fileTextPersistence.count()).isEqualTo(13l);
 	}
 	
 	@Test @Order(40)
 	public void business_extract_text_pdf() {
 		business.import_(List.of("src/test/resources/various_mime_type"), null, null, null, null, "meliane");
 		Result result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_IMAGE);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_IMAGE);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/fiche_activite.pdf")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_TEXT);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_TEXT);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/pdf_as_image.pdf")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_IMAGE);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/word.docx")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/worddocx")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
 		result = business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf")));
-		assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
+		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
-		assertThat(fileTextPersistence.count()).isEqualTo(19l);
+		assertThat(fileTextPersistence.count()).isEqualTo(20l);
 		
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf"),"Pour sauver son peuple");
 		assertor.assertTextContainsIgnoreCaseByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf"),"le jour");

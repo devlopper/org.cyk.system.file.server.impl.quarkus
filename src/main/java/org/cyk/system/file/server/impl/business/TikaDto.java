@@ -13,5 +13,10 @@ public class TikaDto implements Serializable {
 
 	@JsonbProperty(value = "Content-Type") String contentType;
 	@JsonbProperty(value = "X-TIKA:content") String content;
-	
+
+	public static String getContent(TikaDto dto) {
+		if(dto == null)
+			return null;
+		return dto.getContent();
+	}
 }

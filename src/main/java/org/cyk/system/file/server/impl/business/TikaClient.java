@@ -19,6 +19,12 @@ public interface TikaClient {
 	@Produces({MediaType.TEXT_PLAIN})
 	String ping();
 	
+	@PUT
+	@Path(PATH_GET_MIME_TYPE)
+	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
+	@Produces({MediaType.TEXT_PLAIN})
+	String getMimeType(byte[] bytes);
+	
 	/* Get text by bytes */
 	
 	@PUT
@@ -31,7 +37,7 @@ public interface TikaClient {
 	@Path(PATH_GET_TEXT)
 	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
 	@Produces({MediaType.APPLICATION_JSON})
-	TikaDto getTextByBytes(byte[] bytes,@HeaderParam("X-Tika-PDFOcrStrategy") String pdfOcrStrategy,@HeaderParam("X-Tika-PDFextractInlineImages") String pdfExtractInlineImages);
+	TikaDto getTextByBytes(byte[] bytes,@HeaderParam(HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY) String pdfOcrStrategy,@HeaderParam(HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES) String pdfExtractInlineImages);
 	
 	/* Get text by fetch */
 	
@@ -39,11 +45,15 @@ public interface TikaClient {
 	@Path(PATH_GET_TEXT)
 	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
 	@Produces({MediaType.APPLICATION_JSON})
-	TikaDto getTextByFetch(@HeaderParam("fetcherName") String fetcherName,@HeaderParam("fetchKey") String fetchKey);
+	TikaDto getTextByFetch(@HeaderParam("fetcherName") String fetcherName,@HeaderParam("fetchKey") String fetchKey
+			,@HeaderParam(HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY) String pdfOcrStrategy,@HeaderParam(HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES) String pdfExtractInlineImages);
 	
 	/**/
 	
+	String PATH_GET_MIME_TYPE = "detect/stream";
 	String PATH_GET_TEXT = "tika/text";
+	String HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY = "X-Tika-PDFOcrStrategy";
 	String HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY = "ocr_only";
+	String HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES = "X-Tika-PDFextractInlineImages";
 	String HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE = "true";
 }

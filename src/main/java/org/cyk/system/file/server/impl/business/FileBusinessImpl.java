@@ -24,16 +24,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.Tika;
-import org.apache.tika.config.TikaConfig;
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.business.FileTextBusiness;
+import org.cyk.system.file.server.api.business.TextExtractor;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
+import org.cyk.system.file.server.api.persistence.FileTextPersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.system.file.server.impl.configuration.Configuration;
 import org.cyk.system.file.server.impl.persistence.FileBytesImpl;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
 import org.cyk.system.file.server.impl.persistence.FileImplUniformResourceLocatorExtensionMimeTypeReader;
+import org.cyk.system.file.server.impl.persistence.FileImplUniformResourceLocatorMimeTypeBytesReader;
 import org.cyk.system.file.server.impl.persistence.FileTextImpl;
 import org.cyk.utility.__kernel__.DependencyInjection;
 import org.cyk.utility.__kernel__.array.ArrayHelper;
@@ -56,7 +58,6 @@ import org.cyk.utility.file.PathsScanner;
 import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.ConsumeEvent;
@@ -67,11 +68,12 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 
 	@Inject EntityManager entityManager;
 	@Inject EventBus eventBus;
-	@Inject @RestClient TikaClient tikaClient;
+	@Inject @org.cyk.system.file.server.impl.Tika TextExtractor textExtractor;
 	
 	@Inject FilePersistence persistence;
+	@Inject FileTextPersistence fileTextPersistence;
 	@Inject FileTextBusiness fileTextBusiness;
-	
+
 	@Inject Configuration configuration;
 	
 	@Override
@@ -318,10 +320,70 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	
 	/* Extract Text */
 	
+	void extractText(Collection<String> identifiers,String auditIdentifier,String auditFunctionality, String auditWho,LocalDateTime auditWhen,Result result) {
+		
+	}
+	
 	@Override
 	public Result extractText(Collection<String> identifiers, String auditWho) {
-		return new TextExtractorImpl().extract(identifiers, auditWho);
+		Result result = new Result().open();
+		FileValidator.validateExtractTextInputs(identifiers, auditWho);
+		List<String> finalIdentifiers = entityManager.createNamedQuery(FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS, String.class).setParameter("identifiers", identifiers).getResultList();
+		
+		Long count = fileTextPersistence.count();
+		if(CollectionHelper.isNotEmpty(finalIdentifiers)) {
+			String auditIdentifier = generateAuditIdentifier();
+			LocalDateTime auditWhen = LocalDateTime.now();
+			new BatchProcessor.AbstractImpl<String>() {
+				@Override
+				protected String getName() {
+					return String.format("Extraction of file's text. %s", finalIdentifiers.size());
+				}
+				@Override
+				protected void __process__(List<String> identifiers, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
+					Collection<Object[]> arrays = new FileImplUniformResourceLocatorMimeTypeBytesReader().readByIdentifiers(identifiers, null);
+					if(CollectionHelper.isNotEmpty(arrays))
+						extractText(arrays, result, auditIdentifier, EXTRACT_TEXT_AUDIT_IDENTIFIER, auditWho, auditWhen, entityManager);
+				}
+				@Override
+				protected Integer getSize() {
+					return 5;
+				}
+				@Override
+				protected Integer getExecutorThreadCount() {
+					return 4;
+				}
+				@Override
+				protected Long getExecutorTimeoutDuration() {
+					return 15l;
+				}
+				@Override
+				protected TimeUnit getExecutorTimeoutUnit() {
+					return TimeUnit.MINUTES;
+				}
+			}.process(finalIdentifiers);
+		}
+		count = fileTextPersistence.count() - count;
+		// Return of message
+		result.close().setName(String.format("Extraction of file's text(%s) by %s",count,auditWho)).log(getClass());
+		result.addMessages(String.format("file's text extracted",count));
+		return result;		
 	}
+	
+	@Transactional
+	void extractText(Collection<Object[]> arrays,Result result,String auditIdentifier,String auditFunctionality, String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+		arrays.forEach(array -> {
+			String text = textExtractor.extract((byte[])array[3], (String)array[1], (String)array[2],result);
+			if(StringHelper.isBlank(text))
+				return;
+			if(text.length() > configuration.file().text().maximalLength())
+				text = text.substring(0, configuration.file().text().maximalLength().intValue());
+			FileTextImpl fileText = new FileTextImpl().setIdentifier((String)array[0]).setText(text);
+			audit(fileText, auditIdentifier, auditFunctionality, auditWho, auditWhen);
+			entityManager.persist(fileText);
+		});
+	}
+	
 	
 	@Override
 	public Result extractText(String auditWho, String... identifiers) {
@@ -330,7 +392,47 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	
 	@Override
 	public Result extractTextOfAll(String auditWho) {
-		return new TextExtractorImpl().extractOfAll(auditWho);
+		Result result = new Result().open();
+		FileValidator.validateExtractTextAllInputs(auditWho);
+		List<String> identifiers = entityManager.createNamedQuery(FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS, String.class).getResultList();
+		Long count = fileTextPersistence.count();
+		if(CollectionHelper.isNotEmpty(identifiers)) {
+			String auditIdentifier = generateAuditIdentifier();
+			LocalDateTime auditWhen = LocalDateTime.now();
+			new BatchProcessor.AbstractImpl<String>() {
+				@Override
+				protected String getName() {
+					return String.format("Extraction of all file's text. %s", identifiers.size());
+				}
+				@Override
+				protected void __process__(List<String> identifiers, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
+					Collection<Object[]> arrays = new FileImplUniformResourceLocatorMimeTypeBytesReader().readByIdentifiers(identifiers, null);
+					if(CollectionHelper.isNotEmpty(arrays))
+						extractText(arrays, result, auditIdentifier, EXTRACT_TEXT_OF_ALL_AUDIT_IDENTIFIER, auditWho, auditWhen, entityManager);
+				}
+				@Override
+				protected Integer getSize() {
+					return 5;
+				}
+				@Override
+				protected Integer getExecutorThreadCount() {
+					return 4;
+				}
+				@Override
+				protected Long getExecutorTimeoutDuration() {
+					return 15l;
+				}
+				@Override
+				protected TimeUnit getExecutorTimeoutUnit() {
+					return TimeUnit.MINUTES;
+				}
+			}.process(identifiers);
+		}
+		count = fileTextPersistence.count() - count;
+		// Return of message
+		result.close().setName(String.format("Extraction of all file's text(%s) by %s",count,auditWho)).log(getClass());
+		result.addMessages(String.format("All file's text extracted",count));
+		return result;		
 	}
 	
 	void extractTextOfAllBySystem() {
@@ -579,7 +681,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		@Override
 		FileTextImpl instantiate(String identifier,String uniformResourceLocator, byte[] bytes,String extension,String mimeType,Result result) {
 			// Compute text from bytes depending on mime type
-			TikaDto tikaDto = tikaClient.getTextByBytes(bytes);
+			/*TikaDto tikaDto = tikaClient.getTextByBytes(bytes);
 			String text = tikaDto == null ? null : tikaDto.getContent();
 			if(StringHelper.isBlank(text) && StringUtils.startsWithIgnoreCase(mimeType, "application/pdf")) {
 				tikaDto = tikaClient.getTextByBytes(bytes,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE);
@@ -599,8 +701,8 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			if(text == null) {
 				result.addMessages(String.format("Cannot get text of %s | %s", identifier,uniformResourceLocator));
 				return null;
-			}
-			return new FileTextImpl(identifier,text);
+			}*/
+			return null;
 		}
 		
 		@Override
@@ -642,19 +744,23 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		}
 		
 		String getTextFromPdfUsingImageProcessing(byte[] bytes,Result result) throws Exception {
-			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_IMAGE);
+			/*result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_IMAGE);
 			TikaDto tikaDto = tikaClient.getTextByBytes(bytes,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE);
 			if(tikaDto == null)
 				return null;
 			return fileTextBusiness.normalize(tikaDto.getContent());
+			*/
+			return null;
 		}
 		
 		String getTextFromOthers(byte[] bytes,Result result) {
-			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_OTHERS);
+			/*result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_OTHERS);
 			TikaDto tikaDto = tikaClient.getTextByBytes(bytes);
 			if(tikaDto == null)
 				return null;
 			return tikaDto.getContent();
+			*/
+			return null;
 		}
 	}
 	
@@ -665,7 +771,8 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		;
 		
 		public static final String TEXT_EXTRACTOR_TEXT = "TEXT_EXTRACTOR_TEXT";
-		public static final String TEXT_EXTRACTOR_IMAGE = "TEXT_EXTRACTOR_IMAGE";
+		public static final String TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION = "TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION";
 		public static final String TEXT_EXTRACTOR_OTHERS = "TEXT_EXTRACTOR_OTHERS";
+		public static final String TEXT_EXTRACTOR_FETCH = "TEXT_EXTRACTOR_FETCH";
 	}
 }

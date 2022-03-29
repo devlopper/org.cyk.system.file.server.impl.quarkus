@@ -193,6 +193,7 @@ public interface Configuration {
 	
 	interface Tika {
 		Server server();
+		
 		interface Server {
 			@WithConverter(StringConverter.class)
 			String uniformResourceIdentifier();
@@ -220,6 +221,24 @@ public interface Configuration {
 					}
 				}
 			}
+			
+			File file();
+			
+			interface File {
+				List<Fetcher> fetchers();
+				
+				interface Fetcher {
+					@WithConverter(StringConverter.class)
+					String name();
+					
+					Path path();
+					
+					interface Path {
+						@WithConverter(StringConverter.class)
+						String regularExpression();
+					}
+				}
+			}	
 		}
 	}
 
