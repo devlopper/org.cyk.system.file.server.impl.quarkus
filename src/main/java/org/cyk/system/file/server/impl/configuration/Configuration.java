@@ -88,8 +88,7 @@ public interface Configuration {
 				Boolean parallelized();
 			}
 		}
-		
-		
+				
 		interface Size {
 			@WithDefault("1")
 			Long minimal();
@@ -97,8 +96,7 @@ public interface Configuration {
 			@WithDefault("5242880")//5M
 			Long maximal();
 		}
-		
-		
+				
 		interface Duplicate {
 			@WithDefault("false")
 			Boolean allowed();
@@ -196,11 +194,31 @@ public interface Configuration {
 	interface Tika {
 		Server server();
 		interface Server {
+			@WithConverter(StringConverter.class)
+			String uniformResourceIdentifier();
+			
 			Tests tests();
 			
 			interface Tests {
 				@WithDefault("false")
 				Boolean runnable();
+				
+				List<Fetch> fetchs();
+							
+				interface Fetch {
+					@WithConverter(StringConverter.class)
+					String fetcherName();
+					
+					@WithConverter(StringConverter.class)
+					String key();
+					
+					Result result();
+					
+					interface Result {
+						@WithConverter(StringConverter.class)
+						String subString();
+					}
+				}
 			}
 		}
 	}

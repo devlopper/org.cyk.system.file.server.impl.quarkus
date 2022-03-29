@@ -56,9 +56,6 @@ public class FileTextBusinessImpl extends AbstractSpecificBusinessImpl<FileText>
 		if(text.length() < configuration.file().text().minimalLength())
 			return null;
 		
-		if(text.length() > configuration.file().text().maximalLength())
-			text = text.substring(0, configuration.file().text().maximalLength().intValue());
-		
 		return text;
 	}
 }

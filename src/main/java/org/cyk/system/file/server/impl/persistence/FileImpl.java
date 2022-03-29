@@ -43,8 +43,8 @@ import lombok.experimental.Accessors;
 		,@NamedQuery(name = FileImpl.QUERY_DELETE_BY_IDENTIFIERS,query = "DELETE FROM FileImpl t WHERE t.identifier IN :identifiers")
 		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_QUERY)
 		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_BY_IDENTIFIERS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_BYTES_NOT_EXISTS_QUERY+" AND t.identifier IN :identifiers")
-		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY)
-		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY+" AND t.identifier IN :identifiers")
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY+" ORDER BY t.size ASC")
+		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_BY_IDENTIFIERS,query = FileImpl.QUERY_READ_IDENTIFIERS_WHERE_TEXT_NOT_EXISTS_QUERY+" AND t.identifier IN :identifiers ORDER BY t.size ASC")
 })
 public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl implements File,Serializable{
 

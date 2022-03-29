@@ -10,18 +10,40 @@ import javax.ws.rs.core.MediaType;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@Path("/tika")
+@Path("/")
 @RegisterRestClient(configKey = "tika")
 public interface TikaClient {
 
 	@GET
+	@Path("/tika")
 	@Produces({MediaType.TEXT_PLAIN})
 	String ping();
 	
+	/* Get text by bytes */
+	
 	@PUT
-	@Path("/text")
+	@Path(PATH_GET_TEXT)
 	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
 	@Produces({MediaType.APPLICATION_JSON})
-	TikaDto getText(@HeaderParam("X-Tika-PDFOcrStrategy") String pdfOcrStrategy,@HeaderParam("X-Tika-PDFextractInlineImages") String pdfExtractInlineImages,byte[] bytes);
+	TikaDto getTextByBytes(byte[] bytes);
 	
+	@PUT
+	@Path(PATH_GET_TEXT)
+	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
+	@Produces({MediaType.APPLICATION_JSON})
+	TikaDto getTextByBytes(byte[] bytes,@HeaderParam("X-Tika-PDFOcrStrategy") String pdfOcrStrategy,@HeaderParam("X-Tika-PDFextractInlineImages") String pdfExtractInlineImages);
+	
+	/* Get text by fetch */
+	
+	@PUT
+	@Path(PATH_GET_TEXT)
+	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
+	@Produces({MediaType.APPLICATION_JSON})
+	TikaDto getTextByFetch(@HeaderParam("fetcherName") String fetcherName,@HeaderParam("fetchKey") String fetchKey);
+	
+	/**/
+	
+	String PATH_GET_TEXT = "tika/text";
+	String HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY = "ocr_only";
+	String HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE = "true";
 }

@@ -25,12 +25,12 @@ import io.quarkus.test.junit.TestProfile;
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
 public class TikaTest extends AbstractTest {
 
-	@Inject @RestClient TikaClient service;
+	@Inject @RestClient TikaClient client;
 	@Inject Configuration configuration;
 	
 	boolean isTestRunnable() {
 		if(!configuration.tika().server().tests().runnable()) {
-			LogHelper.logWarning(StringUtils.repeat("#", 20)+" Tika server tests are not runnable "+StringUtils.repeat("#", 20), getClass());
+			LogHelper.logWarning(String.format("%1$s %2$s %1$s", StringUtils.repeat("#", 30),"Tika server tests are not runnable"), getClass());
 			return false;
 		}
 		return true;
@@ -40,16 +40,51 @@ public class TikaTest extends AbstractTest {
 	public void ping() throws Exception {
 		if(!isTestRunnable())
 			return;
-		assertThat(service.ping()).startsWith("This is Tika Server");
+		assertThat(client.ping()).startsWith("This is Tika Server");
 	}
 	
 	@Test
-	public void getText() throws Exception {
+	public void getTextFromPdfSearchable() throws Exception {
 		if(!isTestRunnable())
 			return;
 		byte[] bytes = IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/Esprit Saint Tu es le don de Dieu-PU.pdf")));
-		TikaDto dto = service.getText("ocr_only","true",bytes);
+		TikaDto dto = client.getTextByBytes(bytes);
 		assertThat(dto).isNotNull();
-		assertThat(dto.getContent()).contains("ESPRIT SAINT, TU ES LE DON DE DIEU");
+		assertThat(dto.getContent()).contains("Harmonisation:  Joseph Franck Mpola");
+		
+		dto = client.getTextByBytes(bytes,null,null);
+		assertThat(dto).isNotNull();
+		assertThat(dto.getContent()).contains("Harmonisation:  Joseph Franck Mpola");
+		
+		dto = client.getTextByBytes(bytes,"no_ocr",null);
+		assertThat(dto).isNotNull();
+		assertThat(dto.getContent()).contains("Harmonisation:  Joseph Franck Mpola");
+	}
+	
+	@Test
+	public void getTextFromPdfScanned() throws Exception {
+		if(!isTestRunnable())
+			return;
+		byte[] bytes = IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/pdf_as_image.pdf")));
+		TikaDto dto = client.getTextByBytes(bytes,"ocr_only","true");
+		assertThat(dto).isNotNull();
+		assertThat(dto.getContent()).contains("Permit me to introduce you to the facility of facsimile");
+	}
+	
+	@Test
+	public void getTextByFetch() {
+		if(!isTestRunnable())
+			return;
+		if(configuration.tika().server().tests().fetchs().isEmpty()) {
+			String message = String.format("%1$s %2$s %1$s",  StringUtils.repeat("#", 20),"Get text by fetch has not been tested because no fetch has been provided. Please provide some.");
+			LogHelper.logInfo(message, getClass());
+			return;	
+		}
+		for(Configuration.Tika.Server.Tests.Fetch fetch : configuration.tika().server().tests().fetchs()) {
+			LogHelper.logInfo(String.format("%1$s Fetch %2$s using %3$s %1$s",  StringUtils.repeat("#", 20),fetch.key(),fetch.fetcherName()), getClass());
+			TikaDto dto = client.getTextByFetch(fetch.fetcherName(), fetch.key());
+			assertThat(dto).isNotNull();
+			assertThat(dto.getContent()).contains(fetch.result().subString());
+		}		
 	}
 }

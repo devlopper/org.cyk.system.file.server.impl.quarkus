@@ -1,7 +1,5 @@
 package org.cyk.system.file.server.impl.business;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -24,14 +22,9 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.Tika;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.config.TikaConfig;
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.business.FileTextBusiness;
 import org.cyk.system.file.server.api.persistence.File;
@@ -63,19 +56,18 @@ import org.cyk.utility.file.PathsScanner;
 import org.cyk.utility.persistence.EntityManagerGetter;
 import org.cyk.utility.persistence.entity.EntityLifeCycleListenerImpl;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
-import org.xml.sax.ContentHandler;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.core.eventbus.EventBus;
-import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
 
 @ApplicationScoped
 public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> implements FileBusiness,Serializable{
 
 	@Inject EntityManager entityManager;
 	@Inject EventBus eventBus;
+	@Inject @RestClient TikaClient tikaClient;
 	
 	@Inject FilePersistence persistence;
 	@Inject FileTextBusiness fileTextBusiness;
@@ -464,14 +456,22 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				List<String> identifiers = getEntityManager().createNamedQuery(getUnexistingQueryIdentifier(), String.class).getResultList();;
 				Integer count = 0;
 				if(CollectionHelper.isNotEmpty(identifiers)) {
-					List<List<String>> batches = CollectionHelper.getBatches(identifiers, 5);
 					List<Integer> counts = new ArrayList<>();
+					/*List<List<String>> batches = CollectionHelper.getBatches(identifiers, 5);
 					batches.parallelStream().forEach(batch -> {
 						Integer c = extractOf(batch, result, auditIdentifier, getAllAuditFunctionality(), auditWho, auditWhen, getEntityManager());
 						synchronized(counts) {
 							counts.add(c);
 						}
 					});
+					*/
+					identifiers.forEach(identifier -> {
+						Integer c = extractOf(List.of(identifier), result, auditIdentifier, getAllAuditFunctionality(), auditWho, auditWhen, getEntityManager());
+						synchronized(counts) {
+							counts.add(c);
+						}
+					});
+					
 					for(Integer index : counts)
 						count = count + index;
 				}
@@ -579,13 +579,22 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		@Override
 		FileTextImpl instantiate(String identifier,String uniformResourceLocator, byte[] bytes,String extension,String mimeType,Result result) {
 			// Compute text from bytes depending on mime type
-			String text = null;
+			TikaDto tikaDto = tikaClient.getTextByBytes(bytes);
+			String text = tikaDto == null ? null : tikaDto.getContent();
+			if(StringHelper.isBlank(text) && StringUtils.startsWithIgnoreCase(mimeType, "application/pdf")) {
+				tikaDto = tikaClient.getTextByBytes(bytes,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE);
+				text = tikaDto == null ? null : tikaDto.getContent();
+			}
+			
 			if(StringUtils.startsWithIgnoreCase(mimeType, "text/"))
 				text = getFromText(bytes, result);
 			else if(StringUtils.startsWithIgnoreCase(mimeType, "application/pdf"))
 			    text = getTextFromPdf(bytes, result);
 			else
 			    text = getTextFromOthers(bytes, result);
+			
+			if(text != null && text.length() > configuration.file().text().maximalLength())
+				text = text.substring(0, configuration.file().text().maximalLength().intValue());
 			
 			if(text == null) {
 				result.addMessages(String.format("Cannot get text of %s | %s", identifier,uniformResourceLocator));
@@ -615,7 +624,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				PDFTextStripper textStripper = new PDFTextStripper();
 				String text = StringUtils.stripToNull(textStripper.getText(document));
 				if (text == null || text.isBlank())
-					text = getTextFromPdfUsingImageProcessing(document,result);
+					text = getTextFromPdfUsingImageProcessing(bytes,result);
 				else
 					result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_TEXT);
 				return text;
@@ -632,37 +641,20 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			}
 		}
 		
-		String getTextFromPdfUsingImageProcessing(PDDocument document,Result result) throws Exception {
+		String getTextFromPdfUsingImageProcessing(byte[] bytes,Result result) throws Exception {
 			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_IMAGE);
-			PDFRenderer pdfRenderer = new PDFRenderer(document);
-			ITesseract tesseract = new Tesseract();
-			tesseract.setDatapath(configuration.file().opticalCharacterRecognition().tesseract().data().path());
-			tesseract.setLanguage(configuration.file().opticalCharacterRecognition().tesseract().language());
-			StringBuilder stringBuilder = new StringBuilder();
-			for (int page = 0; page < document.getNumberOfPages(); page++) {
-			    BufferedImage bufferedImage = pdfRenderer.renderImageWithDPI(page, 300);
-			    String string = tesseract.doOCR(bufferedImage);
-			    if(StringHelper.isBlank(string))
-			    	continue;
-			    stringBuilder.append(string);
-			}
-			return fileTextBusiness.normalize(stringBuilder.toString());
+			TikaDto tikaDto = tikaClient.getTextByBytes(bytes,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY,TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE);
+			if(tikaDto == null)
+				return null;
+			return fileTextBusiness.normalize(tikaDto.getContent());
 		}
 		
 		String getTextFromOthers(byte[] bytes,Result result) {
 			result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_OTHERS);
-			Parser parser = new AutoDetectParser();
-		    ContentHandler handler = new BodyContentHandler();
-		    Metadata metadata = new Metadata();
-		    ParseContext context = new ParseContext();
-		    
-		    try {
-				parser.parse(new ByteArrayInputStream(bytes), handler, metadata, context);
-			} catch (Exception exception) {
-				result.addMessages(exception.getMessage());
+			TikaDto tikaDto = tikaClient.getTextByBytes(bytes);
+			if(tikaDto == null)
 				return null;
-			}
-		    return StringUtils.stripToNull(handler.toString());
+			return tikaDto.getContent();
 		}
 	}
 	
