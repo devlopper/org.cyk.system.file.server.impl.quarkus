@@ -22,11 +22,22 @@ public interface Profile {
 		return buildTags(classes == null || classes.length == 0 ? null : List.of(classes));
 	}
 	
-	public static Map<String,String> buildConfig(List<Class<?>> classes) {
+	public static Map<String,String> buildConfig(List<Class<?>> classes,Boolean loadScriptSettable,Boolean portSettable) {
 		Map<String, String> config = new HashMap<>();
-		config.put("quarkus.hibernate-orm.sql-load-script", String.format("sql/%s.sql", classes.stream().map(klass -> klass.getSimpleName().toLowerCase()).collect(Collectors.joining("-"))));
-		setPort(config, 8081);
+		if(Boolean.TRUE.equals(loadScriptSettable))
+			setLoadScript(config, classes);
+		if(Boolean.TRUE.equals(portSettable))
+			setPort(config, 8081);
 		return config;
+	}
+	
+	public static Map<String,String> buildConfig(List<Class<?>> classes) {
+		return buildConfig(classes, Boolean.TRUE,Boolean.TRUE);
+	}
+	
+	public static Map<String,String> setLoadScript(Map<String,String> map,List<Class<?>> classes) {
+		map.put("quarkus.hibernate-orm.sql-load-script", String.format("sql/%s.sql", classes.stream().map(klass -> klass.getSimpleName().toLowerCase()).collect(Collectors.joining("-"))));
+		return map;
 	}
 	
 	public static Map<String,String> setPort(Map<String,String> map,Integer value) {
