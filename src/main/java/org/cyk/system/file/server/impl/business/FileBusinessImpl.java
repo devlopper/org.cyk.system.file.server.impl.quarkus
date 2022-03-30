@@ -326,7 +326,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		count = fileTextPersistence.count() - count;
 		// Return of message
 		result.close().setName(String.format("Extraction of file's text(%s) by %s",count,auditWho)).log(getClass());
-		result.addMessages(String.format("file's text extracted",count));
+		result.addMessages(String.format("file's text extracted : %s",count));
 		return result;		
 	}
 	
@@ -392,7 +392,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		count = fileTextPersistence.count() - count;
 		// Return of message
 		result.close().setName(String.format("Extraction of all file's text(%s) by %s",count,auditWho)).log(getClass());
-		result.addMessages(String.format("All file's text extracted",count));
+		result.addMessages(String.format("All file's text extracted : %s",count));
 		return result;		
 	}
 	

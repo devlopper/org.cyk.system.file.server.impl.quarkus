@@ -53,4 +53,11 @@ public class TextExtractorTikaTest extends AbstractTikaTest {
 			return;
 		assertThat(textExtractor.extract(null, buildUrl("various_mime_type/word.docx"), null,null)).contains("This is my sheet with extension");
 	}
+	
+	@Test
+	public void extractFromFileSystem_accent() {
+		if(!isTestRunnable())
+			return;
+		assertThat(textExtractor.extract(null, buildUrl("various_mime_type/6 - Prière universelle.pdf"), null,null)).contains("Dieu plus grand que notre coeur");
+	}
 }

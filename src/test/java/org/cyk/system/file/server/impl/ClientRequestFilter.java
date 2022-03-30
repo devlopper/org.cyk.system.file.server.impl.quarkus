@@ -11,6 +11,7 @@ public class ClientRequestFilter implements javax.ws.rs.client.ClientRequestFilt
 	@Override
 	public void filter(ClientRequestContext requestContext) throws IOException {
 		//System.out.println("ClientRequestFilter.filter() ::: "+requestContext.getMethod()+" "+requestContext.getUri());
+		//System.out.println("ClientRequestFilter.filter() HEADERS ::: "+requestContext.getHeaders());
 		//System.out.println(requestContext.getEntity());
 	}
 

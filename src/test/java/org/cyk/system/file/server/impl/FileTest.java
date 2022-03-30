@@ -460,7 +460,9 @@ public class FileTest extends AbstractTest {
 		/*result = */business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf")));
 		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OTHERS);
 		
-		assertThat(fileTextPersistence.count()).isEqualTo(20l);
+		business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/6 - Prière universelle.pdf")));
+		
+		assertThat(fileTextPersistence.count()).isEqualTo(21l);
 		
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf"),"Pour sauver son peuple");
 		assertor.assertTextContainsIgnoreCaseByUniformResourceLocator(buildUrl("various_mime_type/bientot_le_jour_se_levera.pdf"),"le jour");
@@ -469,5 +471,6 @@ public class FileTest extends AbstractTest {
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/word.docx"),"This is my sheet with extension");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/worddocx"),"This is my sheet");
 		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/rtf.rtf"),"This is my sheet rtf too");
+		assertor.assertTextContainsByUniformResourceLocator(buildUrl("various_mime_type/6 - Prière universelle.pdf"),"Nous nous tournons vers toi Seigneur");
 	}
 }

@@ -1,8 +1,7 @@
 package org.cyk.system.file.server.impl.business;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.text.Normalizer;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.cyk.system.file.server.api.business.TextExtractor;
+import org.cyk.system.file.server.api.business.TextNormalizer;
 import org.cyk.system.file.server.impl.business.FileBusinessImpl.ResultKey;
 import org.cyk.system.file.server.impl.configuration.Configuration;
 import org.cyk.utility.__kernel__.file.FileHelper;
@@ -21,6 +21,7 @@ import org.cyk.utility.business.Result;
 public abstract class AbstractTextExtractorImpl extends AbstractObject implements TextExtractor,Serializable {
 
 	@Inject Configuration configuration;
+	@Inject TextNormalizer textNormalizer;
 	
 	@Override
 	public String extract(byte[] bytes,String uniformResourceLocator, String mimeType,Result result) {
@@ -52,7 +53,7 @@ public abstract class AbstractTextExtractorImpl extends AbstractObject implement
 			if(result != null)
 				result.map(ResultKey.TEXT_EXTRACTOR, ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION);
 			String text = __extractUsingOpticalCharacterRecognition__(bytes, mimeType);
-			text = normalize(text);
+			text = textNormalizer.normalize(text,result);
 			return text;
 		}
 		if(result != null)
@@ -84,53 +85,20 @@ public abstract class AbstractTextExtractorImpl extends AbstractObject implement
 	Boolean isScannedPdf(byte[] bytes,String mimeType) {
 		if(!StringUtils.startsWithIgnoreCase(mimeType, "application/pdf"))
 			return Boolean.FALSE;
+		PDDocument document = null;
 		try {
-			PDDocument document = PDDocument.load(bytes);
+			document = PDDocument.load(bytes);
 			PDFTextStripper textStripper = new PDFTextStripper();
 			return StringUtils.stripToNull(textStripper.getText(document)) == null;
 		}catch(Exception exception) {
 			throw new RuntimeException(exception);
-		}		
-	}
-	
-	/**/
-	
-	public String normalize(String text) {
-		text = StringUtils.stripToNull(text);
-		if(StringHelper.isBlank(text))
-			return null;
-
-		text = Normalizer.normalize(text, configuration.file().text().normalizer().form());
-		if(StringHelper.isBlank(text))
-			return null;
-		
-		for(Configuration.File.Text.Replacer replacer : configuration.file().text().replacers()) {
-			text = text.replaceAll(replacer.regularExpression(), replacer.replacement());
-			if(StringHelper.isBlank(text))
-				return null;
+		}finally {
+			if(document != null)
+				try {
+					document.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 		}
-		
-		text = text.lines().filter(line -> {
-			if(line.length() < configuration.file().text().line().minimalLength())
-				return Boolean.FALSE;
-			String[] words = line.split(configuration.file().text().line().word().separator());
-			if(words != null && words.length > 0) {
-				Integer count = 0;
-				for(String word : words)
-					if(word.strip().length() < configuration.file().text().line().word().minimalLength())
-						count++;
-				
-				if( ((words.length-count)*1.0 / words.length) < configuration.file().text().line().word().minimalRate())
-					return Boolean.FALSE;
-			}
-			return Boolean.TRUE;
-		}).collect(Collectors.joining(configuration.file().text().line().separator()));
-		if(StringHelper.isBlank(text))
-			return null;
-		
-		if(text.length() < configuration.file().text().minimalLength())
-			return null;
-		
-		return text;
 	}
 }

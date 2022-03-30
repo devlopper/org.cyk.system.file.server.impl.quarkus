@@ -1,11 +1,15 @@
 package org.cyk.system.file.server.impl.business;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
 
 import org.cyk.system.file.server.impl.Tika;
 import org.cyk.system.file.server.impl.business.FileBusinessImpl.ResultKey;
@@ -39,14 +43,33 @@ public class TextExtractorTikaImpl extends AbstractTextExtractorImpl implements 
 	
 	@Override
 	String __extract__(String uniformResourceLocator, String mimeType,Result result) {
-		String[] fetchDetails = computeFetchDetails(uniformResourceLocator);
+		String decodedUniformResourceLocator = null;
+		try {
+			decodedUniformResourceLocator = URLDecoder.decode(uniformResourceLocator, "UTF-8");
+		} catch (UnsupportedEncodingException exception) {
+			result.addMessages(exception.toString());
+			return null;
+		} 
+		String[] fetchDetails = computeFetchDetails(decodedUniformResourceLocator);
 		if(fetchDetails == null)
 			return super.__extract__(uniformResourceLocator, mimeType,result);
+		if(fetchDetails.length != 2) {
+			LogHelper.logWarning(String.format("Fetch details count of <<%s>> does not equal 2 : %s",uniformResourceLocator, Arrays.deepToString(fetchDetails)), getClass());
+			return super.__extract__(uniformResourceLocator, mimeType,result);
+		}
 		Boolean isScannedPdf = isScannedPdf(UniformResourceLocatorHelper.getBytes(uniformResourceLocator), mimeType);
 		if(result != null)
 			result.map(ResultKey.TEXT_EXTRACTOR,isScannedPdf ? ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION : ResultKey.TEXT_EXTRACTOR_OTHERS);
-		return TikaDto.getContent(client.getTextByFetch(fetchDetails[0], fetchDetails[1],isScannedPdf ? TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY : null
-				,isScannedPdf ? TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE : null));
+		TikaDto dto;
+		try {
+			dto = client.getTextByFetch(fetchDetails[0], fetchDetails[1],isScannedPdf ? TikaClient.HEADER_PARAMETER_X_TIKA_PDF_OCR_STRATEGY_OCR_ONLY : null
+					,isScannedPdf ? TikaClient.HEADER_PARAMETER_X_TIKA_PDF_EXTRACT_IN_LINE_IMAGES_TRUE : null);
+		} catch (WebApplicationException exception) {
+			LogHelper.logWarning(String.format("Exception while fetching %s. Trying with default mode", Arrays.deepToString(fetchDetails)), getClass());
+			return super.__extract__(uniformResourceLocator, mimeType,result);
+		}
+		String text = TikaDto.getContent(dto);
+		return isScannedPdf ? textNormalizer.normalize(text,result) : text;
 	}
 	
 	public String[] computeFetchDetails(String uniformResourceLocator) {
