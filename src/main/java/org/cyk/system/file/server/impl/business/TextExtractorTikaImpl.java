@@ -23,7 +23,7 @@ public class TextExtractorTikaImpl extends AbstractTextExtractorImpl implements 
 	@Override
 	String computeMimeType(byte[] bytes, String uniformResourceLocator) {
 		if(bytes != null)
-			return client.getMimeType(bytes);
+			return client.getMimeType(bytes,"attachment; "+uniformResourceLocator);
 		return null;
 	}
 

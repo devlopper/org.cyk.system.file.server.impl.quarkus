@@ -23,7 +23,7 @@ public interface TikaClient {
 	@Path(PATH_GET_MIME_TYPE)
 	@Consumes({MediaType.APPLICATION_OCTET_STREAM})
 	@Produces({MediaType.TEXT_PLAIN})
-	String getMimeType(byte[] bytes);
+	String getMimeType(byte[] bytes,@HeaderParam("Content-Disposition") String contentDisposition);
 	
 	/* Get text by bytes */
 	

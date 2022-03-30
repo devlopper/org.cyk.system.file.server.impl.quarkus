@@ -12,6 +12,7 @@ import org.cyk.system.file.server.impl.business.TikaClient;
 import org.cyk.system.file.server.impl.business.TikaDto;
 import org.cyk.system.file.server.impl.configuration.Configuration;
 import org.cyk.utility.__kernel__.log.LogHelper;
+import org.cyk.utility.rest.HeaderHelper;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,21 @@ public class TikaTest extends AbstractTikaTest {
 		if(!isTestRunnable())
 			return;
 		assertThat(client.ping()).startsWith("This is Tika Server");
+	}
+	
+	@Test
+	public void getMimeTypeFromBytesOnly() throws Exception{
+		assertThat(client.getMimeType(IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/Esprit Saint Tu es le don de Dieu-PU.pdf"))), null)).isEqualTo("application/pdf");
+	}
+	
+	@Test
+	public void getMimeTypeFromContentDispositionOnly() throws Exception{
+		assertThat(client.getMimeType(null, HeaderHelper.formatContentDisposition("foo.csv"))).isEqualTo("text/csv");
+	}
+	
+	@Test
+	public void getMimeTypeFromBytesAndContentDisposition() throws Exception{
+		assertThat(client.getMimeType(IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/Esprit Saint Tu es le don de Dieu-PU.pdf"))),HeaderHelper.formatContentDisposition("foo.csv"))).isEqualTo("application/pdf");
 	}
 	
 	@Test
