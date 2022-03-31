@@ -7,4 +7,5 @@ public interface Parameters {
 	String SHA1 = "sha1";
 	String SHA1S = "sha1s";
 	String IS_A_DUPLICATE = "is_a_duplicate";
+	String IS_NAME_NORMALIZED = "is_name_normalized";
 }
