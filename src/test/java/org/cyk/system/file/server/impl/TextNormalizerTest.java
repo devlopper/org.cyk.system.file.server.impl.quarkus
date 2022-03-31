@@ -16,7 +16,7 @@ import io.quarkus.test.junit.TestProfile;
 @QuarkusTest
 @TestProfile(Profile.TextNormalizer.class)
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public class TextNormalizerTest extends AbstractTest {
+public class TextNormalizerTest extends AbstractTikaTest {
 
 	@Inject TextNormalizer normalizer;
 	@Inject @Tika TextExtractor extractor;
@@ -64,6 +64,8 @@ public class TextNormalizerTest extends AbstractTest {
 	
 	@Test
 	public void normalize_file_01() throws Exception {
+		if(!isTestRunnable())
+			return;
 		String text = extractor.extract(null, buildUrl("various_mime_type/to_be_normilized_01.txt"), null,null);	
 		text = normalizer.normalize(text);
 		assertThat(text).contains("Chantons");
@@ -71,6 +73,8 @@ public class TextNormalizerTest extends AbstractTest {
 	
 	@Test
 	public void normalize_file_02() throws Exception {
+		if(!isTestRunnable())
+			return;
 		String text = extractor.extract(null, buildUrl("various_mime_type/to_be_normilized_02.txt"), null,null);	
 		text = normalizer.normalize(text);
 		assertThat(text).contains("Chantons");

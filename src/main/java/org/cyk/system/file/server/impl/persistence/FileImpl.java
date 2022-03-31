@@ -50,6 +50,8 @@ import lombok.experimental.Accessors;
 })
 public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl implements File,Serializable{
 
+	@Column(name=COLUMN_SOURCE_UNIFORM_RESOURCE_LOCATOR) String sourceUniformResourceLocator;
+	
 	/**
 	 * Physical location. Can be local (file:///) or remote (ftp, http, ...)
 	 */
@@ -108,6 +110,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String FIELD_NAME_AND_EXTENSION_MIME_TYPE_SIZE = "nameAndExtensionMimeTypeSize";
 	public static final String FIELD_MIME_TYPE = "mimeType";
 	public static final String FIELD_UNIFORM_RESOURCE_LOCATOR = "uniformResourceLocator";
+	public static final String FIELD_SOURCE_UNIFORM_RESOURCE_LOCATOR = "sourceUniformResourceLocator";
 	public static final String FIELD_SIZE = "size";
 	public static final String FIELD_SHA1 = "sha1";
 	public static final String FIELDS_UNIFORM_RESOURCE_LOCATOR_NAME_AND_EXTENSION_MIME_TYPE_SIZE_BYTES = "uniformResourceLocatorNameAndExtensionMimeTypeSizeBytes";
@@ -120,6 +123,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String COLUMN_EXTENSION = "extension";
 	public static final String COLUMN_MIME_TYPE = "mime";
 	public static final String COLUMN_UNIFORM_RESOURCE_LOCATOR = "url";
+	public static final String COLUMN_SOURCE_UNIFORM_RESOURCE_LOCATOR = "source_url";
 	public static final String COLUMN_SIZE = "size";
 	public static final String COLUMN_SHA1 = "sha1";
 	

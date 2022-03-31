@@ -44,7 +44,7 @@ import io.quarkus.test.junit.TestProfile;
 @QuarkusTest
 @TestProfile(Profile.File.class)
 @TestMethodOrder(value = MethodOrderer.OrderAnnotation.class)
-public class FileTest extends AbstractTest {
+public class FileTest extends AbstractTikaTest {
 
 	static ClientAndServer SERVER;
 	static Integer WEB_SERVER_PORT = 10000;
@@ -444,6 +444,8 @@ public class FileTest extends AbstractTest {
 	
 	@Test @Order(40)
 	public void business_extract_text_pdf() {
+		if(!isTestRunnable())
+			return;
 		business.import_(List.of("src/test/resources/various_mime_type"), null, null, null, null, "meliane");
 		/*Result result = */business.extractText("a", persistence.readIdentifierByUniformResourceLocator(buildUrl("various_mime_type/aube_nouvelle.pdf")));
 		//assertThat(result.getMapValueByKey(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR)).isEqualTo(FileBusinessImpl.ResultKey.TEXT_EXTRACTOR_OPTICAL_CHARACTER_RECOGNITION);

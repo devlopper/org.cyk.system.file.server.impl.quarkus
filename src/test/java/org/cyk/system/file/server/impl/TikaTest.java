@@ -37,16 +37,22 @@ public class TikaTest extends AbstractTikaTest {
 	
 	@Test
 	public void getMimeTypeFromBytesOnly() throws Exception{
+		if(!isTestRunnable())
+			return;
 		assertThat(client.getMimeType(IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/Esprit Saint Tu es le don de Dieu-PU.pdf"))), null)).isEqualTo("application/pdf");
 	}
 	
 	@Test
 	public void getMimeTypeFromContentDispositionOnly() throws Exception{
+		if(!isTestRunnable())
+			return;
 		assertThat(client.getMimeType(null, HeaderHelper.formatContentDisposition("foo.csv"))).isEqualTo("text/csv");
 	}
 	
 	@Test
 	public void getMimeTypeFromBytesAndContentDisposition() throws Exception{
+		if(!isTestRunnable())
+			return;
 		assertThat(client.getMimeType(IOUtils.toByteArray(new FileInputStream(new java.io.File(System.getProperty("user.dir"),"src/test/resources/various_mime_type/Esprit Saint Tu es le don de Dieu-PU.pdf"))),HeaderHelper.formatContentDisposition("foo.csv"))).isEqualTo("application/pdf");
 	}
 	

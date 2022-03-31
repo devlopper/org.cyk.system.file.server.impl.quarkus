@@ -115,10 +115,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				CollectionHelper.add(existingsSha1,Boolean.TRUE,persistence.readSha1s());
 			}
 			
-			Collection<String> existingsFilesURLs = new HashSet<>();
-			CollectionHelper.add(existingsFilesURLs, Boolean.TRUE, persistence.readUniformResourceLocatorsWhereProtocolIsFile());
+			Collection<String> existingsURLs = new HashSet<>();
+			CollectionHelper.add(existingsURLs, Boolean.TRUE, persistence.readUniformResourceLocators());
 			
-			Collection<String> existingsFilesURLsFilesNames = existingsFilesURLs.stream().map(url -> FileHelper.getName(StringUtils.substringAfterLast(url, "/"))).collect(Collectors.toSet());
+			Collection<String> existingsFilesURLsFilesNames = existingsURLs.stream().filter(url -> url.toLowerCase().startsWith("file:/")).map(url -> FileHelper.getName(StringUtils.substringAfterLast(url, "/"))).collect(Collectors.toSet());
 			
 			String auditIdentifier = generateAuditIdentifier();
 			LocalDateTime auditWhen = LocalDateTime.now();
@@ -130,10 +130,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			List<Path> lPaths = new ArrayList<>();
 			for(Path path : paths) {
 				String url = path.toFile().toURI().toString();
-				if(existingsFilesURLs.contains(url))
+				if(existingsURLs.contains(url))
 					continue;
 				lPaths.add(path);
-				existingsFilesURLs.add(url);
+				existingsURLs.add(url);
 			}
 			
 			new BatchProcessor.AbstractImpl<Path>() {
@@ -143,7 +143,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				}
 				@Override
 				protected void __process__(List<Path> paths, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
-					import_(paths, existingsFilesURLs, existingsSha1,existingsFilesURLsFilesNames, isDuplicateAllowedFinal,files, result, auditIdentifier, auditWho, auditWhen, entityManager);
+					import_(paths, existingsURLs, existingsSha1,existingsFilesURLsFilesNames, isDuplicateAllowedFinal,files, result, auditIdentifier, auditWho, auditWhen, entityManager);
 				}
 				@Override
 				protected Integer getSize() {
@@ -175,7 +175,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	}
 	
 	@Transactional
-	void import_(Collection<Path> paths,Collection<String> existingsFilesURLs,Collection<String> existingsSha1,Collection<String> existingsFilesURLsFilesNames,Boolean isDuplicateAllowed,Collection<File> files,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+	void import_(Collection<Path> paths,Collection<String> existingsURLs,Collection<String> existingsSha1,Collection<String> existingsFilesURLsFilesNames,Boolean isDuplicateAllowed,Collection<File> files,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
 		//Filter paths to get only non duplicate : sha1 must be unique
 		Map<Path,String> pathsSha1s = new TreeMap<>();
 		final Map<Path,String> map = new LinkedHashMap<>();
@@ -206,6 +206,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 		map.forEach((path,sha1) -> {
 			FileImpl file = new FileImpl();
 			file.setIdentifier(IdentifiableSystem.generateRandomly());
+			file.setSourceUniformResourceLocator(path.toFile().toURI().toString());
 			file.setNameAndExtension(path.toFile().getName());
 			file.setSize(path.toFile().length());		
 			file.setSha1(sha1);
