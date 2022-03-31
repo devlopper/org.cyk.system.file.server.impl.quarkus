@@ -11,6 +11,8 @@ public interface FilePersistence extends org.cyk.utility.persistence.SpecificPer
 	
 	Collection<String> readUniformResourceLocators();
 	
+	Collection<String> readUniformResourceLocatorsWhereProtocolIsFile();
+	
 	Collection<String> readNames();
 
 	Collection<String> readSha1s();
