@@ -3,7 +3,9 @@ CREATE SCHEMA `kwordz_file`;
 CREATE TABLE `at_file` (
   `identifier` varchar(36) NOT NULL,
   `url` varchar(2048) DEFAULT NULL,
+  `source_url` varchar(2048) DEFAULT NULL,
   `name` varchar(1024) NOT NULL,
+  `initial_name` varchar(1024) NOT NULL,
   `extension` varchar(10) DEFAULT NULL,
   `mime` varchar(32) DEFAULT NULL,
   `size` bigint NOT NULL,
