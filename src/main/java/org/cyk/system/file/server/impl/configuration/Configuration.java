@@ -27,6 +27,52 @@ public interface Configuration {
 		@WithDefault(".pdf|.txt|.docx|.doc|.rtf|.jpeg|.jpg|.png|.bmp|.gif")
 		String acceptedPathNameRegularExpression();
 		*/
+		
+		@WithDefault("true")
+		Boolean copyToDirectory();
+		
+		Directory directory();
+		
+		interface Directory {
+			
+			String name();
+			
+			@WithDefault("true")
+			Boolean creatable();
+			
+			@WithDefault("false")
+			Boolean emptyable();
+		}
+		
+		Name name();
+		
+		interface Name {
+			
+			@WithDefault("IDENTIFIER")
+			Strategy strategy();
+			
+			enum Strategy {
+				NONE,IDENTIFIER,NORMALIZER,RANDOMIZER
+			}
+			
+			Normalizer normalizer();
+			
+			interface Normalizer {
+				@WithDefault("NFD")
+				java.text.Normalizer.Form form();
+			}
+			
+			Character character();
+			
+			interface Character {
+				@WithDefault("true")
+				Boolean accentRemovable();
+				
+				@WithDefault("é,è,ç,à,ù")
+				List<java.lang.Character> forbidden();
+			}
+		}
+		
 		Duplicate duplicate();
 		
 		Size size();
@@ -167,7 +213,7 @@ public interface Configuration {
 			
 			@WithConverter(LongConverter.class)
 			@Max(value = Long.MAX_VALUE)
-			@WithDefault("9223372036854775807")
+			@WithDefault("8192")
 			Long maximalLength();
 		}
 	}

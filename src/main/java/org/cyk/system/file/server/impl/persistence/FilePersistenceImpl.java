@@ -41,6 +41,11 @@ public class FilePersistenceImpl extends AbstractSpecificPersistenceImpl<File>  
 	}
 	
 	@Override
+	public Collection<String> readNames() {
+		return entityManager.createNamedQuery(FileImpl.QUERY_READ_NAME,String.class).getResultList();
+	}
+	
+	@Override
 	public Collection<String> readSha1s() {
 		return entityManager.createNamedQuery(FileImpl.QUERY_READ_SHA1,String.class).getResultList();
 	}

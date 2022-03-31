@@ -19,6 +19,7 @@ import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.system.file.server.api.service.FileDto;
 import org.cyk.system.file.server.api.service.FileService;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
+import org.cyk.system.file.server.impl.persistence.FileQueryStringBuilder;
 import org.cyk.utility.__kernel__.enumeration.Action;
 import org.cyk.utility.__kernel__.protocol.http.HttpHelper;
 import org.cyk.utility.business.Result;
@@ -78,6 +79,11 @@ public class FileTest extends AbstractTest {
 	protected static void listenAfterAll() {
 		if(SERVER != null)
 			SERVER.stop();
+	}
+	
+	//@Test @Order(10)
+	public void persistence_queryStringBuilder_predicate_nameIsNormalized() {
+		assertThat(FileQueryStringBuilder.Predicate.nameIsNormalized()).isEqualTo("NOT (name LIKE %é% OR name LIKE %è%)");
 	}
 	
 	@Test @Order(10)

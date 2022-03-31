@@ -34,6 +34,7 @@ import lombok.experimental.Accessors;
 })
 @NamedQueries(value = {
 		@NamedQuery(name = FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" ASC")
+		,@NamedQuery(name = FileImpl.QUERY_READ_NAME,query = "SELECT t."+FileImpl.FIELD_NAME+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_NAME+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_IDENTIFIER+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" = :"+Parameters.UNIFORM_RESOURCE_LOCATOR)
 		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1,query = "SELECT t."+FileImpl.FIELD_SHA1+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NOT NULL ORDER BY t."+FileImpl.FIELD_SHA1+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_WHERE_SHA1_IS_NULL,query = "SELECT t FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NULL ORDER BY t."+FileImpl.FIELD_IDENTIFIER+" ASC")
@@ -56,10 +57,13 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	/** 
 	 * Logical name
 	 */
-	@NotNull
-	@Column(name=COLUMN_NAME,nullable = false) 
+	@NotNull @Column(name=COLUMN_NAME,nullable = false) private String name;
 	//@FullTextField(projectable = Projectable.YES)
-	private String name;
+	
+	/** 
+	 * Logical name
+	 */
+	@NotNull @Column(name=COLUMN_INITIAL_NAME,nullable = false) private String initialName;
 	
 	/* 
 	 * Derived informations. Those informations can be derived from bytes or collected from inputed file.
@@ -95,6 +99,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	/**/
 	
 	public static final String FIELD_NAME = "name";
+	public static final String FIELD_INITIAL_NAME = "initial_name";
 	public static final String FIELD_BYTES = "bytes";
 	public static final String FIELD_TEXT = "text";
 	public static final String FIELD_EXTENSION = "extension";
@@ -110,6 +115,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	public static final String TABLE_NAME = "at_file";
 	
 	public static final String COLUMN_NAME = "name";
+	public static final String COLUMN_INITIAL_NAME = "initial_name";
 	public static final String COLUMN_EXTENSION = "extension";
 	public static final String COLUMN_MIME_TYPE = "mime";
 	public static final String COLUMN_UNIFORM_RESOURCE_LOCATOR = "url";
@@ -124,6 +130,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	
 	public static final String QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readIdentifierByUniformResourceLocator";
 	public static final String QUERY_READ_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readUniformResourceLocator";
+	public static final String QUERY_READ_NAME = "FileImpl.readName";
 	public static final String QUERY_READ_SHA1 = "FileImpl.readSha1";
 	public static final String QUERY_READ_WHERE_SHA1_IS_NULL = "FileImpl.readWhereSha1IsNull";
 	public static final String QUERY_READ_SHA1_HAVING_COUNT_SHA1_GREATER_THAN_ONE = "FileImpl.readSha1HavingCountSha1GreaterThanOne";
