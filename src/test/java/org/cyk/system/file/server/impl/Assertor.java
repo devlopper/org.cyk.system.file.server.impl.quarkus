@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.cyk.system.file.server.api.persistence.FilePersistence;
 import org.cyk.system.file.server.api.persistence.Parameters;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
+import org.cyk.utility.__kernel__.array.ArrayHelper;
 import org.cyk.utility.__kernel__.collection.CollectionHelper;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 
@@ -33,7 +34,7 @@ public class Assertor {
 	public void assertUniformResourceLocators(String...expectedUniformResourceLocators) {
 		Collection<String> uniformResourceLocators = filePersistence.readUniformResourceLocators();
 		if(CollectionHelper.isEmpty(uniformResourceLocators))
-			assertThat(expectedUniformResourceLocators).isNull();
+			assertThat(ArrayHelper.isEmpty(expectedUniformResourceLocators)).isTrue();
 		else
 			assertThat(uniformResourceLocators).containsExactly(expectedUniformResourceLocators);
 	}

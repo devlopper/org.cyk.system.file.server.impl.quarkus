@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cyk.system.file.server.api.business.FileBusiness;
 import org.cyk.system.file.server.api.business.FileTextBusiness;
 import org.cyk.system.file.server.api.business.TextExtractor;
@@ -114,11 +115,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				CollectionHelper.add(existingsSha1,Boolean.TRUE,persistence.readSha1s());
 			}
 			
-			Collection<String> existingsURLs = new HashSet<>();
-			CollectionHelper.add(existingsURLs, Boolean.TRUE, persistence.readUniformResourceLocators());
+			Collection<String> existingsFilesURLs = new HashSet<>();
+			CollectionHelper.add(existingsFilesURLs, Boolean.TRUE, persistence.readUniformResourceLocatorsWhereProtocolIsFile());
 			
-			Collection<String> existingsNames = new HashSet<>();
-			CollectionHelper.add(existingsNames, Boolean.TRUE, persistence.readNames());
+			Collection<String> existingsFilesURLsFilesNames = existingsFilesURLs.stream().map(url -> FileHelper.getName(StringUtils.substringAfterLast(url, "/"))).collect(Collectors.toSet());
 			
 			String auditIdentifier = generateAuditIdentifier();
 			LocalDateTime auditWhen = LocalDateTime.now();
@@ -130,10 +130,10 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 			List<Path> lPaths = new ArrayList<>();
 			for(Path path : paths) {
 				String url = path.toFile().toURI().toString();
-				if(existingsURLs.contains(url))
+				if(existingsFilesURLs.contains(url))
 					continue;
 				lPaths.add(path);
-				existingsURLs.add(url);
+				existingsFilesURLs.add(url);
 			}
 			
 			new BatchProcessor.AbstractImpl<Path>() {
@@ -143,7 +143,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				}
 				@Override
 				protected void __process__(List<Path> paths, Integer batchsCount, Integer batchIndex, EntityManager entityManager) {
-					import_(paths, existingsURLs, existingsSha1,existingsNames, isDuplicateAllowedFinal,files, result, auditIdentifier, auditWho, auditWhen, entityManager);
+					import_(paths, existingsFilesURLs, existingsSha1,existingsFilesURLsFilesNames, isDuplicateAllowedFinal,files, result, auditIdentifier, auditWho, auditWhen, entityManager);
 				}
 				@Override
 				protected Integer getSize() {
@@ -175,7 +175,7 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 	}
 	
 	@Transactional
-	void import_(Collection<Path> paths,Collection<String> existingsURLs,Collection<String> existingsSha1,Collection<String> existingsNames,Boolean isDuplicateAllowed,Collection<File> files,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
+	void import_(Collection<Path> paths,Collection<String> existingsFilesURLs,Collection<String> existingsSha1,Collection<String> existingsFilesURLsFilesNames,Boolean isDuplicateAllowed,Collection<File> files,Result result,String auditIdentifier,String auditWho,LocalDateTime auditWhen,EntityManager entityManager) {
 		//Filter paths to get only non duplicate : sha1 must be unique
 		Map<Path,String> pathsSha1s = new TreeMap<>();
 		final Map<Path,String> map = new LinkedHashMap<>();
@@ -220,29 +220,53 @@ public class FileBusinessImpl extends AbstractSpecificBusinessImpl<File> impleme
 				//Avoid duplicated name
 				Integer duplicateNameIndex = 2;
 				String name = file.getName();
-				while(existingsNames.contains(name)) {
+				while(existingsFilesURLsFilesNames.contains(name)) {
 					name = file.getName()+"_"+duplicateNameIndex;
 					duplicateNameIndex++;
 				}
 				file.setName(name);
 				
 				finalPath = new java.io.File(ApplicationLifeCycleListener.FILE_DIRECTORY,FileHelper.concatenateNameAndExtension(file.getName(), file.getExtension())).toPath();
-				try {
-					Files.copy(path, finalPath);
-				} catch (IOException exception) {
-					result.addMessages(String.format("%s cannot be copied: %s", path,exception.getMessage()));
-					return;
+				if(finalPath.toFile().exists()) {
+					LogHelper.logWarning(String.format("File exist. If it does not matchs sha1 it will be deleted.", finalPath), getClass());
+					if(StringHelper.isNotBlank(sha1)) {
+						String finalSha1 = FileHelper.computeSha1(finalPath.toFile());
+						if(!sha1.equals(finalSha1)) {
+							if(finalPath.toFile().delete())
+								LogHelper.logWarning(String.format("%s has been deleted", finalPath), getClass());
+							else {
+								result.addMessages(String.format("%s cannot be deleted", finalPath));
+								return;
+							}
+						}
+					}
 				}
+				
+				if(!finalPath.toFile().exists()) {
+					try {
+						Files.copy(path, finalPath);
+					} catch (IOException exception) {
+						result.addMessages(String.format("%s cannot be copied: %s", path,exception.getMessage()));
+						return;
+					}
+				}
+				
+				synchronized(result) {
+					existingsFilesURLsFilesNames.add(file.getName());
+				}
+				
+				file.setName(file.getInitialName());//name has been used to created physical and might not be human readable because of selected strategy. Hence use initial name as name 
 			}else
 				finalPath = path;
 			
 			file.setUniformResourceLocator(finalPath.toFile().toURI().toString());
 			
 			audit(file, auditIdentifier, IMPORT_AUDIT_IDENTIFIER, auditWho, auditWhen);
+			
 			entityManager.persist(file);
 			synchronized(result) {
 				files.add(file);
-				existingsNames.add(file.getName());
+				//existingsNames.add(file.getName());
 			}
 		});
 	}

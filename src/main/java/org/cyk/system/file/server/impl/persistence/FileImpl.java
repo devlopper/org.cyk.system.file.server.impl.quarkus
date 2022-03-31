@@ -34,6 +34,7 @@ import lombok.experimental.Accessors;
 })
 @NamedQueries(value = {
 		@NamedQuery(name = FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" ASC")
+		,@NamedQuery(name = FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR_WHERE_PROTOCOL_IS_FILE,query = "SELECT t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" FROM "+FileImpl.ENTITY_NAME+" t WHERE LOWER(t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+") LIKE 'file:%' ORDER BY t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_NAME,query = "SELECT t."+FileImpl.FIELD_NAME+" FROM "+FileImpl.ENTITY_NAME+" t ORDER BY t."+FileImpl.FIELD_NAME+" ASC")
 		,@NamedQuery(name = FileImpl.QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR,query = "SELECT t."+FileImpl.FIELD_IDENTIFIER+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_UNIFORM_RESOURCE_LOCATOR+" = :"+Parameters.UNIFORM_RESOURCE_LOCATOR)
 		,@NamedQuery(name = FileImpl.QUERY_READ_SHA1,query = "SELECT t."+FileImpl.FIELD_SHA1+" FROM "+FileImpl.ENTITY_NAME+" t WHERE t."+FileImpl.FIELD_SHA1+" IS NOT NULL ORDER BY t."+FileImpl.FIELD_SHA1+" ASC")
@@ -99,7 +100,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	/**/
 	
 	public static final String FIELD_NAME = "name";
-	public static final String FIELD_INITIAL_NAME = "initial_name";
+	public static final String FIELD_INITIAL_NAME = "initialName";
 	public static final String FIELD_BYTES = "bytes";
 	public static final String FIELD_TEXT = "text";
 	public static final String FIELD_EXTENSION = "extension";
@@ -130,6 +131,7 @@ public class FileImpl extends AbstractIdentifiableSystemScalarStringAuditedImpl 
 	
 	public static final String QUERY_READ_IDENTIFIER_BY_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readIdentifierByUniformResourceLocator";
 	public static final String QUERY_READ_UNIFORM_RESOURCE_LOCATOR = "FileImpl.readUniformResourceLocator";
+	public static final String QUERY_READ_UNIFORM_RESOURCE_LOCATOR_WHERE_PROTOCOL_IS_FILE = "FileImpl.readUniformResourceLocatorWhereProtocolIsFile";
 	public static final String QUERY_READ_NAME = "FileImpl.readName";
 	public static final String QUERY_READ_SHA1 = "FileImpl.readSha1";
 	public static final String QUERY_READ_WHERE_SHA1_IS_NULL = "FileImpl.readWhereSha1IsNull";

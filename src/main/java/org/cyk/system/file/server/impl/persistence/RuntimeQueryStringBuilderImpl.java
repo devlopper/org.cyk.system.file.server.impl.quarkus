@@ -1,11 +1,13 @@
 package org.cyk.system.file.server.impl.persistence;
 
 import java.io.Serializable;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.cyk.system.file.server.api.persistence.FilePersistence;
+import org.cyk.utility.__kernel__.collection.CollectionHelper;
 import org.cyk.utility.persistence.query.Filter;
 import org.cyk.utility.persistence.query.QueryExecutorArguments;
 import org.cyk.utility.persistence.server.query.string.QueryStringBuilder.Arguments;
@@ -30,5 +32,15 @@ public class RuntimeQueryStringBuilderImpl extends RuntimeQueryStringBuilder.Abs
 	protected void setOrder(QueryExecutorArguments arguments, Arguments builderArguments) {
 		super.setOrder(arguments, builderArguments);
 		FileQueryStringBuilder.Order.populate(arguments, builderArguments);
+	}
+	
+	@Override
+	protected void setProjection(QueryExecutorArguments arguments, Arguments builderArguments) {
+		if(Boolean.TRUE.equals(filePersistence.isProcessable(arguments))) {
+			if(CollectionHelper.isNotEmpty(arguments.getProjections()) 
+					&& arguments.getProjections().stream().filter(p -> FileImpl.FIELD_IDENTIFIER.equals(p.getFieldName())).collect(Collectors.toList()).isEmpty())
+				arguments.addProjectionsFromStrings(FileImpl.FIELD_IDENTIFIER);
+		}
+		super.setProjection(arguments, builderArguments);
 	}
 }

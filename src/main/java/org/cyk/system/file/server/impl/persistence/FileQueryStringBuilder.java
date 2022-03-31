@@ -79,6 +79,7 @@ public interface FileQueryStringBuilder {
 		static String search() {
 			return parenthesis(or(
 					LikeStringBuilder.getInstance().build("t", FileImpl.FIELD_NAME,DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString())
+					//,LikeStringBuilder.getInstance().build("t", FileImpl.FIELD_INITIAL_NAME,DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString())
 					,String.format("EXISTS(SELECT ft.identifier FROM FileTextImpl ft WHERE ft.identifier = t.identifier AND (%s))",LikeStringBuilder.getInstance().build("ft", FileTextImpl.FIELD_TEXT,DependencyInjection.inject(FilePersistence.class).getParameterNameFilterAsString()))
 			));
 		}

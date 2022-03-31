@@ -41,6 +41,11 @@ public class FilePersistenceImpl extends AbstractSpecificPersistenceImpl<File>  
 	}
 	
 	@Override
+	public Collection<String> readUniformResourceLocatorsWhereProtocolIsFile() {
+		return entityManager.createNamedQuery(FileImpl.QUERY_READ_UNIFORM_RESOURCE_LOCATOR_WHERE_PROTOCOL_IS_FILE,String.class).getResultList();
+	}
+	
+	@Override
 	public Collection<String> readNames() {
 		return entityManager.createNamedQuery(FileImpl.QUERY_READ_NAME,String.class).getResultList();
 	}
