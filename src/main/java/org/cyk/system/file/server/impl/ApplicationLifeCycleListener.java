@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.cyk.system.file.server.api.persistence.File;
 import org.cyk.system.file.server.impl.configuration.Configuration;
 import org.cyk.system.file.server.impl.persistence.FileImpl;
@@ -42,7 +43,7 @@ public class ApplicationLifeCycleListener {
 	@Inject Configuration configuration;
 	
     void onStart(@Observes StartupEvent startupEvent) {
-    	//logConfiguration();
+    	logConfiguration();
     	org.cyk.quarkus.extension.hibernate.orm.ApplicationLifeCycleListener.QUALIFIER = org.cyk.system.file.server.api.System.class;
     	DependencyInjection.setQualifierClassTo(org.cyk.system.file.server.api.System.class, EntityReader.class,EntityCounter.class
     			, RuntimeQueryStringBuilder.class,TransientFieldsProcessor.class, Initializer.class,Validator.class);
@@ -103,6 +104,8 @@ public class ApplicationLifeCycleListener {
     }
     
     void logConfiguration() {
+    	System.out.println(String.format("%1$s %2$s %1$s", StringUtils.repeat("+", 20),"Configuration"));
+    	System.out.println("Tika fetchers");
     	configuration.tika().server().file().fetchers().forEach(fetcher -> {
     		System.out.println(fetcher.name()+" : "+fetcher.path().regularExpression());
     	});

@@ -35,6 +35,7 @@ public interface Configuration {
 		
 		interface Directory {
 			
+			@WithDefault("/files")
 			String name();
 			
 			@WithDefault("true")
@@ -150,7 +151,7 @@ public interface Configuration {
 		
 		interface Directories {
 			@WithName("default")
-			@WithDefault("data/files")
+			@WithDefault("/source")
 			List<String> default_();
 		}		
 		
